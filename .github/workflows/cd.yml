@@ -1,0 +1,90 @@
+name: CD
+
+on:
+  push:
+    tags:
+      - 'v*'           # e.g. v1.2.3 or v1.2.3-beta.1
+  workflow_dispatch:
+
+permissions:
+  contents: write       # needed to create GitHub Releases
+  packages: write       # needed to push to GitHub Packages
+
+concurrency:
+  group: publish-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  # Reuse your existing unit test workflow to gate publishing
+  unit-tests:
+    uses: ./.github/workflows/unit-tests.yml
+    with:
+      test_project: Test_Walacor_SDK/Test_Walacor_SDK.csproj
+      run_net48: true
+
+  pack-and-publish:
+    needs: unit-tests
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Derive version from tag
+        id: v
+        shell: bash
+        run: |
+          set -euo pipefail
+          RAW="${GITHUB_REF_NAME}"          # e.g. v1.2.3 or v1.2.3-beta.1
+          VERSION="${RAW#v}"                # strip leading 'v'
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $VERSION"
+
+      - name: Build (Release)
+        run: dotnet build Walacor_SDK/Walacor_SDK.csproj -c Release -p:ContinuousIntegrationBuild=true
+
+      - name: Pack (with symbols)
+        run: |
+          dotnet pack Walacor_SDK/Walacor_SDK.csproj \
+            -c Release \
+            --no-build \
+            -p:PackageVersion="${{ steps.v.outputs.version }}" \
+            -p:ContinuousIntegrationBuild=true \
+            -p:IncludeSymbols=true \
+            -p:SymbolPackageFormat=snupkg \
+            -o ./artifacts
+
+      # Push all tagged builds to GitHub Packages (useful for prereleases/betas)
+      - name: Publish to GitHub Packages
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: >
+          dotnet nuget push "./artifacts/*.nupkg"
+          --skip-duplicate
+          -k ${{ secrets.GITHUB_TOKEN }}
+          -s "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+
+      # Push stable tags (no '-') to NuGet.org, including symbols
+      - name: Publish to NuGet.org (stable only)
+        if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-')
+        run: |
+          dotnet nuget push "./artifacts/*.nupkg"  --skip-duplicate -k ${{ secrets.NUGET_API_KEY }} -s "https://api.nuget.org/v3/index.json"
+          dotnet nuget push "./artifacts/*.snupkg" --skip-duplicate -k ${{ secrets.NUGET_API_KEY }} -s "https://api.nuget.org/v3/index.json"
+
+      # Create a GitHub Release for any tag. Mark prerelease when tag contains '-'
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true
+          files: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg
+          fail_on_unmatched_files: false

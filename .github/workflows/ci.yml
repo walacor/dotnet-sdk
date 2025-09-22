@@ -1,0 +1,12 @@
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  unit-tests:
+    uses: ./.github/workflows/unit-tests.yml
+    with:
+      test_project: Test_Walacor_SDK/Test_Walacor_SDK.csproj
+      run_net48: true

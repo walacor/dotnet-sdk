@@ -1,0 +1,32 @@
+<Project>
+	<PropertyGroup>
+		<!-- Enable Roslyn analyzers and enforce code style in build -->
+		<EnableNETAnalyzers>true</EnableNETAnalyzers>
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+		<AnalysisLevel>latest</AnalysisLevel>
+
+		<!-- Treat warnings as errors to gate CI -->
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<WarningsAsErrors>$(WarningsAsErrors);CA*;IDE*</WarningsAsErrors>
+
+		<!-- Nullable everywhere -->
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Ensure every project feeds stylecop.json to analyzers -->
+		<AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" />
+	</ItemGroup>
+
+	<!-- Use the repo root README.md for the Walacor_SDK NuGet package -->
+	<PropertyGroup Condition="'$(MSBuildProjectName)' == 'Walacor_SDK'">
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(MSBuildProjectName)' == 'Walacor_SDK' and Exists('$(MSBuildThisFileDirectory)README.md')">
+		<None Include="$(MSBuildThisFileDirectory)README.md"
+		      Pack="true"
+		      PackagePath="\"
+		      Link="README.md" />
+	</ItemGroup>
+</Project>

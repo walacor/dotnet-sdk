@@ -1,0 +1,76 @@
+name: Unit Tests
+
+on:
+  workflow_call:
+    inputs:
+      test_project:
+        description: 'Path to test csproj'
+        type: string
+        default: Test_Walacor_SDK/Test_Walacor_SDK.csproj
+      run_net48:
+        description: 'Run .NET Framework 4.8 tests on Windows'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+
+jobs:
+  unit-tests-linux:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - sdk: '5.0.x'
+            tfm: net5.0
+          - sdk: '6.0.x'
+            tfm: net6.0
+          - sdk: '7.0.x'
+            tfm: net7.0
+          - sdk: '8.0.x'
+            tfm: net8.0
+          - sdk: '9.0.x'
+            tfm: net9.0
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install native deps (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libssl3 ca-certificates zlib1g
+
+      - name: Setup .NET ${{ matrix.sdk }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.sdk }}
+
+      - run: dotnet --info
+
+      - name: Build ${{ inputs.test_project }} (${{ matrix.tfm }})
+        run: dotnet build "${{ inputs.test_project }}" -c Release -f ${{ matrix.tfm }}
+
+      - name: Test ${{ inputs.test_project }} (${{ matrix.tfm }})
+        run: dotnet test  "${{ inputs.test_project }}" -c Release -f ${{ matrix.tfm }} --no-build --verbosity normal
+
+  unit-tests-windows-net48:
+    if: ${{ inputs.run_net48 }}
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET (for tooling)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build (net48)
+        run: dotnet build "${{ inputs.test_project }}" -c Release -f net48
+
+      - name: Test (net48)
+        run: dotnet test  "${{ inputs.test_project }}" -c Release -f net48 --no-build --verbosity normal

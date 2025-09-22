@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <!-- <GenerateDocumentationFile>true</GenerateDocumentationFile> -->
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <Deterministic>true</Deterministic>
+
+    <!-- NuGet metadata -->
+    <PackageId>Garo.Test</PackageId>
+    <Authors>Garo</Authors>
+    <Company>Garo</Company>
+    <Description>Garo Test</Description>
+    <PackageTags>Garo Test</PackageTags>
+    <RepositoryUrl>https://github.com/Keshish/Walacor_SDK/</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!-- Choose ONE of these license options -->
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <!-- or: <PackageLicenseFile>LICENSE</PackageLicenseFile> -->
+    <!-- Optional icon inside the nupkg -->
+    <!-- <PackageIcon>icon.png</PackageIcon> -->
+
+    <!-- Symbols & SourceLink -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="C:\Users\garok\Documents\Walacor\projects\Walacor_SDK\README.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Make README/license/icon part of the package --><!-- change the path and remove it from root or vice versa-->
+    <None Include="LICENSE" Pack="true" PackagePath="/" Condition="Exists('LICENSE')" />
+    <None Include="icon.png" Pack="true" PackagePath="/" Condition="Exists('icon.png')" />
+
+    <!-- Analyzers (optional but good) --> <!--make sure that we need this -->
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="all" />
+    <PackageReference Include="Meziantou.Analyzer" Version="2.0.158" PrivateAssets="all" />
+
+    <!-- SourceLink (maps pdb to GitHub for consumers) -->
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,60 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35707.178
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Walacor_SDK", "Walacor_SDK\Walacor_SDK.csproj", "{A47BFC29-42CD-4FCE-9F68-F419ACF54FC7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test_Walacor_SDK", "Test_Walacor_SDK\Test_Walacor_SDK.csproj", "{B3913A2B-FAD5-4F0E-BDA4-C7E59B981189}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{35F0C4C3-2156-4723-AF67-2A948D0A6E6A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{4F7B770F-277C-4EA3-912B-D412C74FC66C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{A94482BE-DA38-4AC9-B648-B964E01E4E07}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".workflows", ".workflows", "{5A4E392F-D30C-4E64-8E4C-42BE2396D1F8}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\cd.yml = .github\workflows\cd.yml
+		ci.yml = ci.yml
+		.github\workflows\ci.yml = .github\workflows\ci.yml
+		.github\workflows\unit-tests.yml = .github\workflows\unit-tests.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{86D60A25-AFEC-4D17-A9D8-8CD029B693AE}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		Directory.Build.props = Directory.Build.props
+		stylecop.json = stylecop.json
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Walacor_SDK.Demo", "Walacor_SDK.Demo\Walacor_SDK.Demo.csproj", "{4E783426-8B13-48BA-B59B-841F91D69B09}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A47BFC29-42CD-4FCE-9F68-F419ACF54FC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A47BFC29-42CD-4FCE-9F68-F419ACF54FC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A47BFC29-42CD-4FCE-9F68-F419ACF54FC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A47BFC29-42CD-4FCE-9F68-F419ACF54FC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3913A2B-FAD5-4F0E-BDA4-C7E59B981189}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3913A2B-FAD5-4F0E-BDA4-C7E59B981189}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3913A2B-FAD5-4F0E-BDA4-C7E59B981189}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3913A2B-FAD5-4F0E-BDA4-C7E59B981189}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E783426-8B13-48BA-B59B-841F91D69B09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E783426-8B13-48BA-B59B-841F91D69B09}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E783426-8B13-48BA-B59B-841F91D69B09}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E783426-8B13-48BA-B59B-841F91D69B09}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A47BFC29-42CD-4FCE-9F68-F419ACF54FC7} = {35F0C4C3-2156-4723-AF67-2A948D0A6E6A}
+		{B3913A2B-FAD5-4F0E-BDA4-C7E59B981189} = {4F7B770F-277C-4EA3-912B-D412C74FC66C}
+		{5A4E392F-D30C-4E64-8E4C-42BE2396D1F8} = {A94482BE-DA38-4AC9-B648-B964E01E4E07}
+	EndGlobalSection
+EndGlobal

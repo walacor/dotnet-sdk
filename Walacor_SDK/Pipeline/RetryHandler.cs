@@ -13,12 +13,54 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
+using Walacor_SDK.Abstractions;
 
 namespace Walacor_SDK.Pipeline
 {
-    internal class RetryHandler
+    internal sealed class RetryHandler : DelegatingHandler
     {
+        private static readonly HttpStatusCode[] TransientCodes = new[]
+        {
+            HttpStatusCode.RequestTimeout, // 408
+            (HttpStatusCode)429, // Too Many Requests
+            HttpStatusCode.InternalServerError, // 500
+            HttpStatusCode.BadGateway, // 502
+            HttpStatusCode.ServiceUnavailable, // 503
+            HttpStatusCode.GatewayTimeout, // 504
+        };
+
+        private readonly IBackoffStrategy _backoff;
+        private readonly int _maxRetries;
+
+        public RetryHandler(
+            IBackoffStrategy backoff,
+            int maxRetries,
+            HttpMessageHandler inner)
+            : base(inner)
+        {
+            this._backoff ?? throw new ArgumentNullException(nameof(backoff));
+            this._maxRetries = Math.Max(0, maxRetries);
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+        {
+            var isIdempotentRead = request.Method == HttpMethod.Get || request.Method == HttpMethod.Head;
+            if (!isIdempotentRead)
+            {
+                return await base.SendAsync(request, ct).ConfigureAwait(false);
+            }
+
+            int attempt = 0;
+            HttpResponseMessage? last = null;
+            while (true)
+            {
+                
+            }
+        }
+
     }
 }

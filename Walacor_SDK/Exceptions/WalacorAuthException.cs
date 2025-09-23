@@ -11,11 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System;
 
 namespace Walacor_SDK.Exceptions
 {
-    internal class WalacorAuthException
+    public sealed class WalacorAuthException(
+        string message,
+        string? correlationId = null,
+        Exception? inner = null)
+        : Exception(message, inner)
     {
+        public string? CorrelationId { get; } = correlationId;
     }
 }
 

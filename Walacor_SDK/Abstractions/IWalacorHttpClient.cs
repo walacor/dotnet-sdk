@@ -27,7 +27,7 @@ namespace Walacor_SDK.Abstractions
 
         Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct = default);
 
-        Task<T> GetJasonAsync<T>(string path, IDictionary<string, string>? query = null, CancellationToken ct = default);
+        Task<T> GetJsonAsync<T>(string path, IDictionary<string, string>? query = null, CancellationToken ct = default);
 
         Task<TResponse> PostJsonAsync<TRequest, TResponse>(string path, TRequest body, CancellationToken ct = default);
 

@@ -13,12 +13,17 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Walacor_SDK.Exceptions
 {
-    internal class WalacorValidationException
+    public sealed class WalacorValidationException(
+        string message,
+        string? responseBody,
+        string? correlationId = null)
+        : Exception(message)
     {
+        public string? CorrelationId { get; } = correlationId;
+
+        public string? ResponseBody { get; } = responseBody;
     }
 }

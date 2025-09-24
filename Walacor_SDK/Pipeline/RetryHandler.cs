@@ -25,15 +25,15 @@ namespace Walacor_SDK.Pipeline
 {
     internal sealed class RetryHandler : DelegatingHandler
     {
-        private static readonly HttpStatusCode[] TransientCodes = new[]
-        {
+        private static readonly HttpStatusCode[] TransientCodes =
+        [
             HttpStatusCode.RequestTimeout, // 408
             (HttpStatusCode)429, // Too Many Requests
             HttpStatusCode.InternalServerError, // 500
             HttpStatusCode.BadGateway, // 502
             HttpStatusCode.ServiceUnavailable, // 503
-            HttpStatusCode.GatewayTimeout, // 504
-        };
+            HttpStatusCode.GatewayTimeout // 504
+        ];
 
         private readonly IBackoffStrategy _backoff;
         private readonly int _maxRetries;

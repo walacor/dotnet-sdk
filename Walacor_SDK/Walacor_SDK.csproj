@@ -11,17 +11,17 @@
     <Deterministic>true</Deterministic>
 
     <!-- NuGet metadata -->
-    <PackageId>Garo.Test</PackageId>
-    <Authors>Garo</Authors>
-    <Company>Garo</Company>
-    <Description>Garo Test</Description>
-    <PackageTags>Garo Test</PackageTags>
-    <RepositoryUrl>https://github.com/Keshish/Walacor_SDK/</RepositoryUrl>
+    <PackageId>Test</PackageId>
+    <Authors>Test</Authors>
+    <Company>Test</Company>
+    <Description>Test</Description>
+    <PackageTags>Test</PackageTags>
+    <RepositoryUrl>https://github.com/walacor/dotnet-sdk/</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <!-- Choose ONE of these license options -->
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <!-- or: <PackageLicenseFile>LICENSE</PackageLicenseFile> -->
     <!-- Optional icon inside the nupkg -->
     <!-- <PackageIcon>icon.png</PackageIcon> -->

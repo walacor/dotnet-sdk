@@ -13,11 +13,13 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Walacor_SDK.Abstractions;
+using Walacor_SDK.Extensions;
 
 namespace Walacor_SDK.Pipeline
 {
@@ -42,7 +44,7 @@ namespace Walacor_SDK.Pipeline
             HttpMessageHandler inner)
             : base(inner)
         {
-            this._backoff ?? throw new ArgumentNullException(nameof(backoff));
+            this._backoff = backoff ?? throw new ArgumentNullException(nameof(backoff));
             this._maxRetries = Math.Max(0, maxRetries);
         }
 
@@ -55,12 +57,64 @@ namespace Walacor_SDK.Pipeline
             }
 
             int attempt = 0;
-            HttpResponseMessage? last = null;
             while (true)
             {
-                
+                attempt++;
+
+                try
+                {
+                    var response = await base
+                        .SendAsync(attempt == 1 ? request : await request.CloneAsync().ConfigureAwait(false), ct)
+                        .ConfigureAwait(false);
+
+                    if (!TransientCodes.Contains(response.StatusCode) || attempt > this._maxRetries + 1)
+                    {
+                        return response;
+                    }
+
+                    var retryAfterDelay = GetRetryAfterDelay(response);
+                    var delay = retryAfterDelay ?? this._backoff.ComputeDelay(attempt);
+                    response.Dispose();
+                    await Task.Delay(delay, ct).ConfigureAwait(false);
+                    continue;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (HttpRequestException)
+                {
+                    if (attempt > this._maxRetries + 1)
+                    {
+                        throw;
+                    }
+
+                    var delay = this._backoff.ComputeDelay(attempt);
+                    await Task.Delay(delay, ct).ConfigureAwait(false);
+                    continue;
+                }
             }
         }
 
+        private static TimeSpan? GetRetryAfterDelay(HttpResponseMessage response)
+        {
+            if (response.Headers.RetryAfter == null)
+            {
+                return null;
+            }
+
+            if (response.Headers.RetryAfter.Delta != null)
+            {
+                return response.Headers.RetryAfter.Delta;
+            }
+
+            if (response.Headers.RetryAfter.Date != null)
+            {
+                var delta = response.Headers.RetryAfter.Date.Value - DateTimeOffset.UtcNow;
+                return delta > TimeSpan.Zero ? delta : TimeSpan.Zero;
+            }
+
+            return null;
+        }
     }
 }

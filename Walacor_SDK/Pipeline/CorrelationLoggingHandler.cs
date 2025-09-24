@@ -62,6 +62,7 @@ namespace Walacor_SDK.Pipeline
             catch (Exception ex)
             {
                 sw.Stop();
+
                 // Attach correlation for upstream mappers
                 ex.Data[CorrelationKey] = correlationId;
                 ex.Data[DurationKey] = sw.ElapsedMilliseconds;

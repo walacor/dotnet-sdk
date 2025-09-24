@@ -12,3 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+class Program
+{
+    static void Main(string[] args)
+    {
+        Console.WriteLine("Running Walacor SDK Demo...");
+    }
+}

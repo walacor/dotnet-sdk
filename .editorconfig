@@ -10,11 +10,13 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 
 [*.cs]
+# --- General code style ---
 dotnet_diagnostic.IDE0073.severity = none
 
-dotnet_diagnostic.SA1633.severity = warning   
-dotnet_diagnostic.SA1635.severity = warning  
-dotnet_diagnostic.SA1636.severity = warning   
+# StyleCop headers
+dotnet_diagnostic.SA1633.severity = warning
+dotnet_diagnostic.SA1635.severity = warning
+dotnet_diagnostic.SA1636.severity = warning
 
 csharp_new_line_before_open_brace = all
 csharp_using_directive_placement = outside_namespace:suggestion
@@ -23,21 +25,27 @@ dotnet_style_qualification_for_property = false:suggestion
 dotnet_style_qualification_for_method = false:suggestion
 dotnet_style_qualification_for_event = false:suggestion
 
-dotnet_naming_rule.private_readonly_fields_should_have_underscore.symbols = private_readonly_fields
-dotnet_naming_symbols.private_readonly_fields.applicable_kinds = field
-dotnet_naming_symbols.private_readonly_fields.applicable_accessibilities = private
-dotnet_naming_symbols.private_readonly_fields.required_modifiers = readonly
-dotnet_naming_rule.private_readonly_fields_should_have_underscore.style = underscore_prefix
+# --- Naming rules ---
+# Disable conflicting StyleCop/IDE rules
+dotnet_diagnostic.SA1309.severity = none
+dotnet_diagnostic.IDE1006.severity = none
+
+# Enforce underscore prefix for ALL private fields
+dotnet_naming_rule.private_fields_should_have_underscore.symbols = private_fields
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_rule.private_fields_should_have_underscore.style = underscore_prefix
 dotnet_naming_style.underscore_prefix.required_prefix = _
 dotnet_naming_style.underscore_prefix.capitalization = camel_case
-dotnet_naming_rule.private_readonly_fields_should_have_underscore.severity = warning
+dotnet_naming_rule.private_fields_should_have_underscore.severity = warning
 
+# --- Other suppressions ---
 dotnet_diagnostic.SA0001.severity = none
 dotnet_diagnostic.SA1600.severity = none
 dotnet_diagnostic.SA1611.severity = none
 dotnet_diagnostic.SA1615.severity = none
 dotnet_diagnostic.SA1618.severity = none
 dotnet_diagnostic.SA1623.severity = none
-dotnet_diagnostic.SA1309.severity = none
-dotnet_diagnostic.IDE1006.severity = none
+
+# Suppress "Program does not contain a static Main" in class libraries
 dotnet_diagnostic.CS5001.severity = none

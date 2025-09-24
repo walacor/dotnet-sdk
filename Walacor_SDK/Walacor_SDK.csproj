@@ -9,8 +9,10 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <Deterministic>true</Deterministic>
+    <OutputType>Library</OutputType>
 
-    <!-- NuGet metadata -->
+
+	  <!-- NuGet metadata -->
     <PackageId>Test</PackageId>
     <Authors>Test</Authors>
     <Company>Test</Company>

@@ -1,4 +1,4 @@
-// Copyright 2024 Walacor Corporation
+// Copyright 2025 Walacor Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,8 +36,10 @@ class APIConnectionError(Exception):
            self.message = message
            self.code = code
            super().__init__(f"[{reason}] {message}")
+
    class FileRequestError(RuntimeError):
        """Raised when a file‐service operation fails."""
+
    class DuplicateFileError(FileRequestError):
        """Raised when the platform reports the file is a duplicate."""
 */

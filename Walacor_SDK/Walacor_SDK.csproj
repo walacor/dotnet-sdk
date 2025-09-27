@@ -39,9 +39,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Make README/license/icon part of the package --><!-- change the path and remove it from root or vice versa-->
+    <!-- Make README/license/icon part of the package -->
     <None Include="LICENSE" Pack="true" PackagePath="/" Condition="Exists('LICENSE')" />
     <None Include="icon.png" Pack="true" PackagePath="/" Condition="Exists('icon.png')" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 
     <!-- Analyzers (optional but good) --> <!--make sure that we need this -->
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="all" />

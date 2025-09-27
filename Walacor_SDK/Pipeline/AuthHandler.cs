@@ -1,4 +1,4 @@
-// Copyright 2024 Walacor Corporation
+// Copyright 2025 Walacor Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,12 +13,57 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading;
+using System.Threading.Tasks;
+using Walacor_SDK.Abstractions;
+using Walacor_SDK.Extensions;
 
 namespace Walacor_SDK.Pipeline
 {
-    internal class AuthHandler
+    internal sealed class AuthHandler(IAuthTokenProvider tokens, HttpMessageHandler inner)
+        : DelegatingHandler(inner)
     {
+        private readonly IAuthTokenProvider _tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
+        private readonly SemaphoreSlim _refreshLock = new SemaphoreSlim(1, 1);
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+        {
+            var token = await this._tokens.GetTokenAsync(ct).ConfigureAwait(false);
+            if (!string.IsNullOrEmpty(token))
+            {
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
+
+            var response = await base.SendAsync(request, ct).ConfigureAwait(false);
+            if (response.StatusCode != HttpStatusCode.Unauthorized)
+            {
+                return response;
+            }
+
+            // 401 Unauthorized - try to refresh token and retry once
+            response.Dispose();
+
+            await this._refreshLock.WaitAsync(ct).ConfigureAwait(false);
+            try
+            {
+                token = await this._tokens.RefreshTokenAsync(ct).ConfigureAwait(false);
+            }
+            finally
+            {
+                this._refreshLock.Release();
+            }
+
+            var retry = await request.CloneAsync().ConfigureAwait(false);
+            if (!string.IsNullOrEmpty(token))
+            {
+                retry.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            }
+
+            var second = await base.SendAsync(retry, ct).ConfigureAwait(false);
+            return second;
+        }
     }
 }

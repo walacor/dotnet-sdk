@@ -12,24 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Runtime.InteropServices;
-
-namespace Walacor_SDK
+namespace Walacor_SDK.Models
 {
-    internal static class RuntimeProbe
+    internal sealed class LoginDto
     {
-        internal static void ThrowOnNetFramework()
-        {
-            string desc = RuntimeInformation.FrameworkDescription ?? string.Empty;
-            if (desc.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
-            {
-                throw new NotSupportedException("Not supported on .NET Framework (intentional for matrix proof).");
-            }
-
-            Console.WriteLine("Hello World!");
-
-            // Otherwise: do nothingRuntimeProbe
-        }
+        public string ApiToken { get; set; } = string.Empty;
     }
 }

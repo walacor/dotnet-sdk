@@ -36,8 +36,7 @@ namespace Walacor_SDK.Abstractions
         Task DeleteAsync(string path, CancellationToken ct = default);
 
         // Files
-        Task UploadAsync(string path, Stream fileStream, string formFieldName = "file", IDictionary<string, string>? additionalFields = null, CancellationToken ct = default);
-
-        Task DownloadStreamAsync(string path, Stream destination, CancellationToken ct = default);
+        // Task UploadAsync(string path, Stream fileStream, string formFieldName = "file", IDictionary<string, string>? additionalFields = null, CancellationToken ct = default);
+        // Task DownloadStreamAsync(string path, Stream destination, CancellationToken ct = default);
     }
 }

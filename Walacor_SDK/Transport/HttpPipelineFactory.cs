@@ -13,12 +13,44 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Net;
+using System.Net.Http;
+using Walacor_SDK.Abstractions;
+using Walacor_SDK.Pipeline;
+using Walacor_SDK.Serialization;
+using Walacor_SDK.Strategies;
 
 namespace Walacor_SDK.Transport
 {
-    internal class HttpPipelineFactory
+    internal sealed class HttpPipelineFactory
     {
+        internal HttpClient Create(
+            Uri baseAddress,
+            IAuthTokenProvider tokens,
+            IBackoffStrategy? backoff = null,
+            int maxRetries = 2)
+        {
+            // Transport
+            var transport = new HttpClientHandler
+            {
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                UseCookies = false,
+            };
+
+            // Chain: Logging -> Retry -> Auth -> Transport
+            var auth = new AuthHandler(tokens, transport);
+            var retry = new RetryHandler(backoff ?? new ExponentialJitterBackoff(), maxRetries, auth);
+            var logging = new CorrelationLoggingHandler(retry);
+
+            var http = new HttpClient(logging)
+            {
+                BaseAddress = baseAddress,
+                Timeout = TimeSpan.FromSeconds(100),
+            };
+
+            return http;
+        }
+
+        internal IJsonSerializer CreateJsonSerializer() => new NewtonsoftJsonSerializer();
     }
 }

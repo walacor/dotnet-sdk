@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Newtonsoft.Json;
+using Walacor_SDK.Abstractions;
 
 namespace Walacor_SDK.Serialization
 {
-    internal class NewtonsoftJsonSerializer
+    internal sealed class NewtonsoftJsonSerializer : IJsonSerializer
     {
+        public string Serialize<T>(T obj) => JsonConvert.SerializeObject(obj);
+
+        public T? Deserialize<T>(string json) => JsonConvert.DeserializeObject<T>(json);
     }
 }

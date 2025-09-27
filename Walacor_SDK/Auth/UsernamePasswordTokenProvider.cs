@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Walacor_SDK.Abstractions;
+using Walacor_SDK.Models;
 
 namespace Walacor_SDK.Auth
 {
@@ -29,7 +30,7 @@ namespace Walacor_SDK.Auth
         private readonly string _password;
 
         // In-memory token cache
-        private string _token;
+        private string _token = string.Empty;
 
         public UsernamePasswordTokenProvider(Uri baseAddress, string userName, string password)
         {
@@ -81,10 +82,5 @@ namespace Walacor_SDK.Auth
         }
 
         public void Dispose() => this._authClient.Dispose();
-
-        private sealed class LoginDto
-        {
-            public required string ApiToken { get; set; }
-        }
     }
 }

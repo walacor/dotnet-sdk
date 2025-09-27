@@ -13,12 +13,15 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Walacor_SDK
 {
-    internal class WalacorHttpClientOptions
+    public sealed class WalacorHttpClientOptions
     {
+        public int MaxRetries { get; set; } = 2;
+
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(100);
+
+        public bool ThrowOnValidation422 { get; set; } = true;
     }
 }

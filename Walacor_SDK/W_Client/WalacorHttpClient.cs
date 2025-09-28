@@ -19,10 +19,10 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Walacor_SDK.Abstractions;
-using Walacor_SDK.Exceptions;
-using Walacor_SDK.Pipeline;
-using Walacor_SDK.Transport;
+using Walacor_SDK.Client.Exceptions;
+using Walacor_SDK.Client.Pipeline;
+using Walacor_SDK.Client.Transport;
+using Walacor_SDK.W_Client.Abstractions;
 
 namespace Walacor_SDK.Client
 {
@@ -104,7 +104,7 @@ namespace Walacor_SDK.Client
             return this._json.Deserialize<TResponse>(json)!;
         }
 
-        public async Task<TResponse> PutJsonAsyncTask<TRequest, TResponse>(string path, TRequest body, CancellationToken ct = default)
+        public async Task<TResponse> PutJsonAsync<TRequest, TResponse>(string path, TRequest body, CancellationToken ct = default)
         {
             using var req = new HttpRequestMessage(HttpMethod.Put, path);
             req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, "application/json");

@@ -14,16 +14,10 @@
 
 using System;
 
-namespace Walacor_SDK.Exceptions
+namespace Walacor_SDK.W_Client.Abstractions
 {
-    public sealed class WalacorValidationException(
-        string message,
-        string? responseBody,
-        string? correlationId = null)
-        : Exception(message)
+    internal interface IBackoffStrategy
     {
-        public string? CorrelationId { get; } = correlationId;
-
-        public string? ResponseBody { get; } = responseBody;
+        TimeSpan ComputeDelay(int attempt);
     }
 }

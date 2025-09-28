@@ -18,10 +18,10 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using Walacor_SDK.Abstractions;
-using Walacor_SDK.Extensions;
+using Walacor_SDK.Client.Extensions;
+using Walacor_SDK.W_Client.Abstractions;
 
-namespace Walacor_SDK.Pipeline
+namespace Walacor_SDK.Client.Pipeline
 {
     internal sealed class AuthHandler(IAuthTokenProvider tokens, HttpMessageHandler inner)
         : DelegatingHandler(inner)
@@ -59,7 +59,7 @@ namespace Walacor_SDK.Pipeline
             var retry = await request.CloneAsync().ConfigureAwait(false);
             if (!string.IsNullOrEmpty(token))
             {
-                retry.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                retry.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
 
             var second = await base.SendAsync(retry, ct).ConfigureAwait(false);

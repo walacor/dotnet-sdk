@@ -12,23 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Net;
-
-namespace Walacor_SDK.Exceptions
+namespace Walacor_SDK.W_Client.Abstractions
 {
-    public sealed class WalacorRequestException(
-        string message,
-        HttpStatusCode statusCode,
-        string? body,
-        string? correlationId = null,
-        Exception? inner = null)
-        : Exception(message, inner)
+    public interface IJsonSerializer
     {
-        public string? CorrelationId { get; } = correlationId;
+        string Serialize<T>(T obj);
 
-        public HttpStatusCode StatusCode { get; } = statusCode;
-
-        public string? ResponseBody { get; } = body;
+        T? Deserialize<T>(string json);
     }
 }

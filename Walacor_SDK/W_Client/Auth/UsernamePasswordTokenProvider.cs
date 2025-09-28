@@ -18,12 +18,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Walacor_SDK.Abstractions;
-using Walacor_SDK.Models;
+using Walacor_SDK.Client.Models;
+using Walacor_SDK.W_Client.Abstractions;
 
-namespace Walacor_SDK.Auth
+namespace Walacor_SDK.W_Client.Auth
 {
-    public sealed class UsernamePasswordTokenProvider : IAuthTokenProvider, IDisposable
+    internal sealed class UsernamePasswordTokenProvider : IAuthTokenProvider, IDisposable
     {
         private readonly HttpClient _authClient;
         private readonly string _userName;
@@ -39,11 +39,11 @@ namespace Walacor_SDK.Auth
                 throw new ArgumentNullException(nameof(baseAddress));
             }
 
-            this._userName = userName ?? throw new ArgumentNullException(nameof(userName));
-            this._password = password ?? throw new ArgumentNullException(nameof(password));
+            _userName = userName ?? throw new ArgumentNullException(nameof(userName));
+            _password = password ?? throw new ArgumentNullException(nameof(password));
 
             // Separate client for auth (no auth handler on itself)
-            this._authClient = new HttpClient(new HttpClientHandler())
+            _authClient = new HttpClient(new HttpClientHandler())
             {
                 BaseAddress = baseAddress,
                 Timeout = TimeSpan.FromSeconds(30),
@@ -53,20 +53,20 @@ namespace Walacor_SDK.Auth
         public Task<string> GetTokenAsync(CancellationToken ct)
         {
             // Return cached token if present; otherwise force a refresh.
-            if (!string.IsNullOrEmpty(this._token))
+            if (!string.IsNullOrEmpty(_token))
             {
-                return Task.FromResult(this._token);
+                return Task.FromResult(_token);
             }
 
-            return this.RefreshTokenAsync(ct);
+            return RefreshTokenAsync(ct);
         }
 
         public async Task<string> RefreshTokenAsync(CancellationToken ct)
         {
-            var bodyObj = new { userName = this._userName, password = this._password };
+            var bodyObj = new { userName = _userName, password = _password };
             var content = new StringContent(JsonConvert.SerializeObject(bodyObj), Encoding.UTF8, "application/json");
 
-            using var res = await this._authClient.PostAsync("/auth/login", content, ct).ConfigureAwait(false);
+            using var res = await _authClient.PostAsync("/auth/login", content, ct).ConfigureAwait(false);
             res.EnsureSuccessStatusCode();
 
             var json = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -77,10 +77,10 @@ namespace Walacor_SDK.Auth
                 throw new InvalidOperationException("Authentication succeeded but no token was returned.");
             }
 
-            this._token = dto.ApiToken; // cache it in memory
-            return this._token;
+            _token = dto.ApiToken; // cache it in memory
+            return _token;
         }
 
-        public void Dispose() => this._authClient.Dispose();
+        public void Dispose() => _authClient.Dispose();
     }
 }

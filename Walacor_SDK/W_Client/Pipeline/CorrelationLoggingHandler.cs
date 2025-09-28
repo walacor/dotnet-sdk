@@ -18,7 +18,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Walacor_SDK.Pipeline
+namespace Walacor_SDK.Client.Pipeline
 {
     internal sealed class CorrelationLoggingHandler(HttpMessageHandler innerHandler) : DelegatingHandler(innerHandler)
     {

@@ -12,10 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Walacor_SDK.Models
+using System;
+using System.Net;
+
+namespace Walacor_SDK.Client.Exceptions
 {
-    internal sealed class LoginDto
+    public sealed class WalacorServerException(
+            string message,
+            HttpStatusCode statusCode,
+            string? body,
+            string? correlationId = null,
+            Exception? inner = null)
+            : Exception(message, inner)
     {
-        public string ApiToken { get; set; } = string.Empty;
+        public string? CorrelationId { get; } = correlationId;
+
+        public HttpStatusCode StatusCode { get; } = statusCode;
+
+        public string? ResponseBody { get; } = body;
     }
 }

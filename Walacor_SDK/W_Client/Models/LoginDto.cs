@@ -12,15 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Newtonsoft.Json;
-using Walacor_SDK.Abstractions;
-
-namespace Walacor_SDK.Serialization
+namespace Walacor_SDK.Client.Models
 {
-    internal sealed class NewtonsoftJsonSerializer : IJsonSerializer
+    internal sealed class LoginDto
     {
-        public string Serialize<T>(T obj) => JsonConvert.SerializeObject(obj);
-
-        public T? Deserialize<T>(string json) => JsonConvert.DeserializeObject<T>(json);
+        public string ApiToken { get; set; } = string.Empty;
     }
 }

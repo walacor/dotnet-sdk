@@ -11,11 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 using System;
 
-namespace Walacor_SDK.Exceptions
+namespace Walacor_SDK.Client.Exceptions
 {
-    public sealed class WalacorAuthException(
+    public sealed class WalacorNetworkException(
         string message,
         string? correlationId = null,
         Exception? inner = null)
@@ -24,22 +25,3 @@ namespace Walacor_SDK.Exceptions
         public string? CorrelationId { get; } = correlationId;
     }
 }
-
-
-/*
-class APIConnectionError(Exception):
-       """Raised when unable to connect to the Walacor API."""
-
-   class BadRequestError(Exception):
-       def __init__(self, reason: str, message: str, code: int = 400):
-           self.reason = reason
-           self.message = message
-           self.code = code
-           super().__init__(f"[{reason}] {message}")
-
-   class FileRequestError(RuntimeError):
-       """Raised when a file‐service operation fails."""
-
-   class DuplicateFileError(FileRequestError):
-       """Raised when the platform reports the file is a duplicate."""
-*/

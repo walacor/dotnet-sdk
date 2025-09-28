@@ -15,12 +15,12 @@
 using System;
 using System.Net;
 using System.Net.Http;
-using Walacor_SDK.Abstractions;
-using Walacor_SDK.Pipeline;
-using Walacor_SDK.Serialization;
-using Walacor_SDK.Strategies;
+using Walacor_SDK.Client.Pipeline;
+using Walacor_SDK.Client.Serialization;
+using Walacor_SDK.Client.Strategies;
+using Walacor_SDK.W_Client.Abstractions;
 
-namespace Walacor_SDK.Transport
+namespace Walacor_SDK.Client.Transport
 {
     internal sealed class HttpPipelineFactory
     {

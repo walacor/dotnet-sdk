@@ -19,7 +19,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Walacor_SDK.Abstractions
+namespace Walacor_SDK.W_Client.Abstractions
 {
     internal interface IWalacorHttpClient
     {
@@ -31,7 +31,7 @@ namespace Walacor_SDK.Abstractions
 
         Task<TResponse> PostJsonAsync<TRequest, TResponse>(string path, TRequest body, CancellationToken ct = default);
 
-        Task<TResponse> PutJsonAsyncTask<TRequest, TResponse>(string path, TRequest body, CancellationToken ct = default);
+        Task<TResponse> PutJsonAsync<TRequest, TResponse>(string path, TRequest body, CancellationToken ct = default);
 
         Task DeleteAsync(string path, CancellationToken ct = default);
 

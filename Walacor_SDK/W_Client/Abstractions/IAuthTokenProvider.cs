@@ -15,7 +15,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Walacor_SDK.Abstractions
+namespace Walacor_SDK.W_Client.Abstractions
 {
     internal interface IAuthTokenProvider
     {

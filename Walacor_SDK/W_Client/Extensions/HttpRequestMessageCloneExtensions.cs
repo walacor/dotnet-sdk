@@ -16,7 +16,7 @@ using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace Walacor_SDK.Extensions
+namespace Walacor_SDK.Client.Extensions
 {
     internal static class HttpRequestMessageCloneExtensions
     {

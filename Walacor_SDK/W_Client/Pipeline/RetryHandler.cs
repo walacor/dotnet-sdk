@@ -18,10 +18,10 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Walacor_SDK.Abstractions;
-using Walacor_SDK.Extensions;
+using Walacor_SDK.Client.Extensions;
+using Walacor_SDK.W_Client.Abstractions;
 
-namespace Walacor_SDK.Pipeline
+namespace Walacor_SDK.Client.Pipeline
 {
     internal sealed class RetryHandler : DelegatingHandler
     {

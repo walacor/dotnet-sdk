@@ -12,23 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Net;
+using Newtonsoft.Json;
+using Walacor_SDK.W_Client.Abstractions;
 
-namespace Walacor_SDK.Exceptions
+namespace Walacor_SDK.Client.Serialization
 {
-    public sealed class WalacorServerException(
-            string message,
-            HttpStatusCode statusCode,
-            string? body,
-            string? correlationId = null,
-            Exception? inner = null)
-            : Exception(message, inner)
+    internal sealed class NewtonsoftJsonSerializer : IJsonSerializer
     {
-        public string? CorrelationId { get; } = correlationId;
+        public string Serialize<T>(T obj) => JsonConvert.SerializeObject(obj);
 
-        public HttpStatusCode StatusCode { get; } = statusCode;
-
-        public string? ResponseBody { get; } = body;
+        public T? Deserialize<T>(string json) => JsonConvert.DeserializeObject<T>(json);
     }
 }

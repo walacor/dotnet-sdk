@@ -14,7 +14,7 @@
 
 using System;
 
-namespace Walacor_SDK
+namespace Walacor_SDK.Client
 {
     public sealed class WalacorHttpClientOptions
     {

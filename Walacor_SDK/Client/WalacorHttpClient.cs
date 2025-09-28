@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -25,7 +24,7 @@ using Walacor_SDK.Exceptions;
 using Walacor_SDK.Pipeline;
 using Walacor_SDK.Transport;
 
-namespace Walacor_SDK
+namespace Walacor_SDK.Client
 {
     internal class WalacorHttpClient : IWalacorHttpClient, IDisposable
     {

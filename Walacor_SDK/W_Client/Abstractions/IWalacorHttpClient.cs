@@ -25,17 +25,56 @@ namespace Walacor_SDK.W_Client.Abstractions
     {
         Uri BaseAddress { get; set; }
 
-        Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct = default);
+        Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken ct = default);
 
-        Task<T> GetJsonAsync<T>(string path, IDictionary<string, string>? query = null, CancellationToken ct = default);
+        Task<T> GetJsonAsync<T>(
+            string path,
+            IDictionary<string, string>? query = null,
+            CancellationToken ct = default);
 
-        Task<TResponse> PostJsonAsync<TRequest, TResponse>(string path, TRequest body, CancellationToken ct = default);
+        Task<TResponse> PostJsonAsync<TRequest, TResponse>(
+            string path,
+            TRequest body,
+            CancellationToken ct = default);
 
-        Task<TResponse> PutJsonAsync<TRequest, TResponse>(string path, TRequest body, CancellationToken ct = default);
+        Task<TResponse> PutJsonAsync<TRequest, TResponse>(
+            string path,
+            TRequest body,
+            CancellationToken ct = default);
 
-        Task DeleteAsync(string path, CancellationToken ct = default);
+        Task DeleteAsync(
+            string path,
+            CancellationToken ct = default);
 
-        // Files
+        Task<T> GetJsonAsync<T>(
+            string path,
+            IDictionary<string, string>? query = null,
+            IDictionary<string, string>? headers = null,
+            CancellationToken ct = default);
+
+        Task<TResponse> PostJsonAsync<TRequest, TResponse>(
+            string path,
+            TRequest body,
+            IDictionary<string, string>? query = null,
+            IDictionary<string, string>? headers = null,
+            CancellationToken ct = default);
+
+        Task<TResponse> PutJsonAsync<TRequest, TResponse>(
+            string path,
+            TRequest body,
+            IDictionary<string, string>? query = null,
+            IDictionary<string, string>? headers = null,
+            CancellationToken ct = default);
+
+        Task DeleteAsync(
+            string path,
+            IDictionary<string, string>? query = null,
+            IDictionary<string, string>? headers = null,
+            CancellationToken ct = default);
+
+        // Files TODO
         // Task UploadAsync(string path, Stream fileStream, string formFieldName = "file", IDictionary<string, string>? additionalFields = null, CancellationToken ct = default);
         // Task DownloadStreamAsync(string path, Stream destination, CancellationToken ct = default);
     }

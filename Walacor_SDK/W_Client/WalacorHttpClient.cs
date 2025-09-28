@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -117,6 +118,91 @@ namespace Walacor_SDK.Client
         {
             using var req = new HttpRequestMessage(HttpMethod.Delete, path);
             using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
+        }
+
+        public async Task<T> GetJsonAsync<T>(
+           string path,
+           IDictionary<string, string>? query = null,
+           IDictionary<string, string>? headers = null,
+           CancellationToken ct = default)
+        {
+            var uri = AppendQuery(path, query);
+            using var req = new HttpRequestMessage(HttpMethod.Get, uri);
+            ApplyHeaders(req, headers);
+
+            using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
+            var json = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            return this._json.Deserialize<T>(json)!;
+        }
+
+        public async Task<TResponse> PostJsonAsync<TRequest, TResponse>(
+            string path,
+            TRequest body,
+            IDictionary<string, string>? query = null,
+            IDictionary<string, string>? headers = null,
+            CancellationToken ct = default)
+        {
+            var uri = AppendQuery(path, query);
+            using var req = new HttpRequestMessage(HttpMethod.Post, uri);
+            req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, "application/json");
+            ApplyHeaders(req, headers);
+
+            using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
+            var json = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            return this._json.Deserialize<TResponse>(json)!;
+        }
+
+        public async Task<TResponse> PutJsonAsync<TRequest, TResponse>(
+            string path,
+            TRequest body,
+            IDictionary<string, string>? query = null,
+            IDictionary<string, string>? headers = null,
+            CancellationToken ct = default)
+        {
+            var uri = AppendQuery(path, query);
+            using var req = new HttpRequestMessage(HttpMethod.Put, uri);
+            req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, "application/json");
+            ApplyHeaders(req, headers);
+
+            using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
+            var json = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            return this._json.Deserialize<TResponse>(json)!;
+        }
+
+        public async Task DeleteAsync(
+            string path,
+            IDictionary<string, string>? query = null,
+            IDictionary<string, string>? headers = null,
+            CancellationToken ct = default)
+        {
+            var uri = AppendQuery(path, query);
+            using var req = new HttpRequestMessage(HttpMethod.Delete, uri);
+            ApplyHeaders(req, headers);
+
+            using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
+        }
+
+        private static void ApplyHeaders(HttpRequestMessage req, IDictionary<string, string>? headers)
+        {
+            if (headers == null || headers.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var kv in headers)
+            {
+                var name = kv.Key;
+                var value = kv.Value ?? string.Empty;
+
+                if (req.Content != null && name.Equals("Content-Type", StringComparison.OrdinalIgnoreCase))
+                {
+                    req.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(value);
+                    continue;
+                }
+
+                req.Headers.Remove(name);
+                req.Headers.TryAddWithoutValidation(name, value);
+            }
         }
 
         private async Task MapErrorsOrReturn(HttpResponseMessage res)

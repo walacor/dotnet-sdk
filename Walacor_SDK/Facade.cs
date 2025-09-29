@@ -16,14 +16,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Walacor_SDK.W_Client.Transport
+namespace Walacor_SDK
 {
-    internal sealed class RequestOptions
+    /// <summary>
+    /// Any URI goes here we need to make sure to attach the api
+    /// This will lazy load the services set up the http client as Singleton
+    /// and pass it to the services TODO.
+    /// </summary>
+    internal class Facade
     {
-        public IDictionary<string, string> Headers { get; } =
-            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-        public IDictionary<string, string> Query { get; } =
-            new Dictionary<string, string>(StringComparer.Ordinal);
     }
 }

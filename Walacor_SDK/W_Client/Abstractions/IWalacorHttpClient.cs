@@ -48,27 +48,27 @@ namespace Walacor_SDK.W_Client.Abstractions
             string path,
             CancellationToken ct = default);
 
-        Task<T> GetJsonAsync<T>(
+        Task<T> GetJsonWithHeadersAsync<T>(
             string path,
             IDictionary<string, string>? query = null,
             IDictionary<string, string>? headers = null,
             CancellationToken ct = default);
 
-        Task<TResponse> PostJsonAsync<TRequest, TResponse>(
-            string path,
-            TRequest body,
-            IDictionary<string, string>? query = null,
-            IDictionary<string, string>? headers = null,
-            CancellationToken ct = default);
-
-        Task<TResponse> PutJsonAsync<TRequest, TResponse>(
+        Task<TResponse> PostJsonWithHeadersAsync<TRequest, TResponse>(
             string path,
             TRequest body,
             IDictionary<string, string>? query = null,
             IDictionary<string, string>? headers = null,
             CancellationToken ct = default);
 
-        Task DeleteAsync(
+        Task<TResponse> PutJsonWithHeadersAsync<TRequest, TResponse>(
+            string path,
+            TRequest body,
+            IDictionary<string, string>? query = null,
+            IDictionary<string, string>? headers = null,
+            CancellationToken ct = default);
+
+        Task DeleteWithHeadersAsync(
             string path,
             IDictionary<string, string>? query = null,
             IDictionary<string, string>? headers = null,

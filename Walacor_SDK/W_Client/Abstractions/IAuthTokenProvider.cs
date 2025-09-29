@@ -19,8 +19,8 @@ namespace Walacor_SDK.W_Client.Abstractions
 {
     internal interface IAuthTokenProvider
     {
-        Task<string> GetTokenAsync(CancellationToken ct);
+        Task<string> GetTokenAsync(CancellationToken ct = default);
 
-        Task<string> RefreshTokenAsync(CancellationToken ct);
+        Task<string> RefreshTokenAsync(CancellationToken ct = default);
     }
 }

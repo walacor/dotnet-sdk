@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Newtonsoft.Json;
+
 namespace Walacor_SDK.Client.Models
 {
     internal sealed class LoginDto
     {
+        [JsonProperty("api_token")]
         public string ApiToken { get; set; } = string.Empty;
     }
 }

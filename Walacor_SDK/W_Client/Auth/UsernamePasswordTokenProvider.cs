@@ -50,7 +50,7 @@ namespace Walacor_SDK.W_Client.Auth
             };
         }
 
-        public Task<string> GetTokenAsync(CancellationToken ct)
+        public Task<string> GetTokenAsync(CancellationToken ct = default)
         {
             // Return cached token if present; otherwise force a refresh.
             if (!string.IsNullOrEmpty(this._token))
@@ -61,12 +61,12 @@ namespace Walacor_SDK.W_Client.Auth
             return this.RefreshTokenAsync(ct);
         }
 
-        public async Task<string> RefreshTokenAsync(CancellationToken ct)
+        public async Task<string> RefreshTokenAsync(CancellationToken ct = default)
         {
             var bodyObj = new { userName = this._userName, password = this._password };
             var content = new StringContent(JsonConvert.SerializeObject(bodyObj), Encoding.UTF8, "application/json");
 
-            using var res = await this._authClient.PostAsync("/auth/login", content, ct).ConfigureAwait(false);
+            using var res = await this._authClient.PostAsync("/api/auth/login", content, ct).ConfigureAwait(false);
             res.EnsureSuccessStatusCode();
 
             var json = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -77,7 +77,10 @@ namespace Walacor_SDK.W_Client.Auth
                 throw new InvalidOperationException("Authentication succeeded but no token was returned.");
             }
 
-            this._token = dto.ApiToken; // cache it in memory
+            this._token = dto.ApiToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                ? dto.ApiToken.Substring("Bearer ".Length)
+                : dto.ApiToken;
+
             return this._token;
         }
 

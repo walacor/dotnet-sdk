@@ -32,9 +32,7 @@ namespace Walacor_SDK.Client
         private readonly HttpClient _http;
         private readonly IJsonSerializer _json;
         private readonly WalacorHttpClientOptions _opts;
-#pragma warning disable CS0414 // Field is assigned but its value is never used
         private readonly bool _ownsHttp;
-#pragma warning restore CS0414 // Field is assigned but its value is never used
 
         public WalacorHttpClient(
             Uri baseAddress,
@@ -69,7 +67,12 @@ namespace Walacor_SDK.Client
         {
             try
             {
-                var response = await this._http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct)
+                /*
+                 * when working on files
+                 * Small/normal JSON APIs → use ResponseContentRead (default).
+                 * Large/streaming data → use ResponseHeadersRead.
+                 */
+                var response = await this._http.SendAsync(request, HttpCompletionOption.ResponseContentRead, ct)
                     .ConfigureAwait(false);
 
                 await this.MapErrorsOrReturn(response).ConfigureAwait(false);
@@ -120,7 +123,7 @@ namespace Walacor_SDK.Client
             using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
         }
 
-        public async Task<T> GetJsonAsync<T>(
+        public async Task<T> GetJsonWithHeadersAsync<T>(
            string path,
            IDictionary<string, string>? query = null,
            IDictionary<string, string>? headers = null,
@@ -135,7 +138,7 @@ namespace Walacor_SDK.Client
             return this._json.Deserialize<T>(json)!;
         }
 
-        public async Task<TResponse> PostJsonAsync<TRequest, TResponse>(
+        public async Task<TResponse> PostJsonWithHeadersAsync<TRequest, TResponse>(
             string path,
             TRequest body,
             IDictionary<string, string>? query = null,
@@ -152,7 +155,7 @@ namespace Walacor_SDK.Client
             return this._json.Deserialize<TResponse>(json)!;
         }
 
-        public async Task<TResponse> PutJsonAsync<TRequest, TResponse>(
+        public async Task<TResponse> PutJsonWithHeadersAsync<TRequest, TResponse>(
             string path,
             TRequest body,
             IDictionary<string, string>? query = null,
@@ -169,7 +172,7 @@ namespace Walacor_SDK.Client
             return this._json.Deserialize<TResponse>(json)!;
         }
 
-        public async Task DeleteAsync(
+        public async Task DeleteWithHeadersAsync(
             string path,
             IDictionary<string, string>? query = null,
             IDictionary<string, string>? headers = null,

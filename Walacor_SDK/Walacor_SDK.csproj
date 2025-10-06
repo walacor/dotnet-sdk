@@ -50,6 +50,15 @@
 
     <!-- SourceLink (maps pdb to GitHub for consumers) -->
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-  </ItemGroup>
 
+    <!-- allow your tests to see internals -->
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+	    <_Parameter1>Test_Walacor_SDK</_Parameter1>
+    </AssemblyAttribute>
+
+    <!-- keep Moq proxy access if you need to mock internals -->
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+	    <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 </Project>

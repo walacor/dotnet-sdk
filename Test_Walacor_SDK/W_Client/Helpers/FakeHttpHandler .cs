@@ -12,7 +12,7 @@ namespace Test_Walacor_SDK.W_Client.Helpers
     {
         private readonly ConcurrentQueue<object> _script = new();
         public List<HttpRequestMessage> Requests { get; } = new();
-        public List<string?> Bodies { get; } = new();  
+        public List<string?> Bodies { get; } = new();
 
         public void Enqueue(HttpResponseMessage response) => _script.Enqueue(response);
         public void Enqueue(Exception ex) => _script.Enqueue(ex);
@@ -41,7 +41,7 @@ namespace Test_Walacor_SDK.W_Client.Helpers
         {
             var copy = new HttpRequestMessage(req.Method, req.RequestUri);
             foreach (var h in req.Headers) copy.Headers.TryAddWithoutValidation(h.Key, h.Value);
-            copy.Content = req.Content; 
+            copy.Content = req.Content;
             return copy;
         }
     }

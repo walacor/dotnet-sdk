@@ -1,6 +1,6 @@
 // Copyright 2025 Walacor Corporation
 //
-// Licensed under the Apache License, Version 2.0 (the "License")
+// Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
@@ -12,12 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-class Program
-{
-    public static async Task Main(string[] args)
-    {
-        Console.WriteLine("Hello Walacor!");
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-        await Walacor_SDK.Tester.CallMeAsync();
+namespace Walacor_SDK
+{
+    /// <summary>
+    /// Any URI goes here we need to make sure to attach the api
+    /// This will lazy load the services set up the http client as Singleton
+    /// and pass it to the services TODO.
+    /// </summary>
+    internal class Facade
+    {
     }
 }

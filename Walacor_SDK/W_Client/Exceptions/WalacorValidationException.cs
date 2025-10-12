@@ -1,6 +1,6 @@
 // Copyright 2025 Walacor Corporation
 //
-// Licensed under the Apache License, Version 2.0 (the "License")
+// Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
@@ -12,12 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-class Program
-{
-    public static async Task Main(string[] args)
-    {
-        Console.WriteLine("Hello Walacor!");
+using System;
 
-        await Walacor_SDK.Tester.CallMeAsync();
+namespace Walacor_SDK.Client.Exceptions
+{
+    public sealed class WalacorValidationException(
+        string message,
+        string? responseBody,
+        string? correlationId = null)
+        : Exception(message)
+    {
+        public string? CorrelationId { get; } = correlationId;
+
+        public string? ResponseBody { get; } = responseBody;
     }
 }

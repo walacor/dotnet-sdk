@@ -9,19 +9,21 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <Deterministic>true</Deterministic>
+    <OutputType>Library</OutputType>
 
-    <!-- NuGet metadata -->
-    <PackageId>Garo.Test</PackageId>
-    <Authors>Garo</Authors>
-    <Company>Garo</Company>
-    <Description>Garo Test</Description>
-    <PackageTags>Garo Test</PackageTags>
-    <RepositoryUrl>https://github.com/Keshish/Walacor_SDK/</RepositoryUrl>
+
+	  <!-- NuGet metadata -->
+    <PackageId>Test</PackageId>
+    <Authors>Test</Authors>
+    <Company>Test</Company>
+    <Description>Test</Description>
+    <PackageTags>Test</PackageTags>
+    <RepositoryUrl>https://github.com/walacor/dotnet-sdk/</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <!-- Choose ONE of these license options -->
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <!-- or: <PackageLicenseFile>LICENSE</PackageLicenseFile> -->
     <!-- Optional icon inside the nupkg -->
     <!-- <PackageIcon>icon.png</PackageIcon> -->
@@ -37,9 +39,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Make README/license/icon part of the package --><!-- change the path and remove it from root or vice versa-->
+    <!-- Make README/license/icon part of the package -->
     <None Include="LICENSE" Pack="true" PackagePath="/" Condition="Exists('LICENSE')" />
     <None Include="icon.png" Pack="true" PackagePath="/" Condition="Exists('icon.png')" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 
     <!-- Analyzers (optional but good) --> <!--make sure that we need this -->
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="all" />
@@ -47,6 +50,19 @@
 
     <!-- SourceLink (maps pdb to GitHub for consumers) -->
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+
+    <!-- allow your tests to see internals -->
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+	    <_Parameter1>Test_Walacor_SDK</_Parameter1>
+    </AssemblyAttribute>
+
+    <!-- keep Moq proxy access if you need to mock internals -->
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+	    <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Services\Impl\Schema\Models\" />
+  </ItemGroup>
 </Project>

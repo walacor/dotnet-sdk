@@ -12,12 +12,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Walacor_SDK;
+
 class Program
 {
     public static async Task Main(string[] args)
     {
         Console.WriteLine("Hello Walacor!");
+        try
+        {
+            var svc = new WalacorService("44.203.135.89", "Admin", "GreenDoor99");
 
-        await Walacor_SDK.Tester.CallMeAsync();
+            if (svc.SchemaService == null)
+            {
+                Console.WriteLine("null");
+            }
+            else
+            {
+
+                Console.WriteLine("not null");
+            }
+
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+            var dataTypes = await svc.SchemaService.GetDataTypesAsync();
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+            if (svc.SchemaService == null)
+            {
+                Console.WriteLine("null");
+            }
+            else
+            {
+                Console.WriteLine("not null");
+            }
+
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine(exception);
+        }
+
+        //await Walacor_SDK.Tester.CallMeAsync();
     }
 }

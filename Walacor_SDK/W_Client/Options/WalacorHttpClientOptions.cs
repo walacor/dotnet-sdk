@@ -13,17 +13,15 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Walacor_SDK
+namespace Walacor_SDK.W_Client.Options
 {
-    /// <summary>
-    /// Any URI goes here we need to make sure to attach the api
-    /// This will lazy load the services set up the http client as Singleton
-    /// and pass it to the services TODO.
-    /// </summary>
-    internal class Facade
+    public sealed class WalacorHttpClientOptions
     {
+        public int MaxRetries { get; set; } = 2;
+
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(100);
+
+        public bool ThrowOnValidation422 { get; set; } = true;
     }
 }

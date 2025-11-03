@@ -13,18 +13,36 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Walacor_SDK.Services.Abs;
-using Walacor_SDK.W_Client.Abstractions;
+using Walacor_SDK.W_Client.Context;
 
 namespace Walacor_SDK.Services.Impl.Schema
 {
-    internal class SchemaService : ISchemaService
+    internal sealed class SchemaService : ISchemaService
     {
-        private readonly IWalacorHttpClient _client;
+        private readonly ClientContext _ctx;
+        private readonly string _segment;
 
-        public SchemaService(IWalacorHttpClient client)
+        public SchemaService(ClientContext ctx, string segment = "schema")
         {
-            this._client = client ?? throw new ArgumentNullException(nameof(client));
+            this._ctx = ctx ?? throw new ArgumentNullException(nameof(ctx));
+            this._segment = string.IsNullOrWhiteSpace(segment) ? "schema" : segment.Trim('/');
+        }
+
+        public IReadOnlyList<string> GetDataTypes()
+            => this.GetDataTypesAsync().GetAwaiter().GetResult();
+
+        public async Task<IReadOnlyList<string>> GetDataTypesAsync(CancellationToken ct = default)
+        {
+            var path = $"{this._segment}/datatypes";
+            var result = await this._ctx.Transport
+                .GetJsonAsync<List<string>>(path, query: null, ct)
+                .ConfigureAwait(false);
+
+            return result;
         }
     }
 }

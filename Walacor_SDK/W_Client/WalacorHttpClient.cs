@@ -24,6 +24,7 @@ using Walacor_SDK.Client.Exceptions;
 using Walacor_SDK.Client.Pipeline;
 using Walacor_SDK.Client.Transport;
 using Walacor_SDK.W_Client.Abstractions;
+using Walacor_SDK.W_Client.Options;
 
 namespace Walacor_SDK.Client
 {

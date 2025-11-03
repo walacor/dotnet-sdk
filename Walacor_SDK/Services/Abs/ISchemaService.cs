@@ -15,12 +15,15 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Walacor_SDK.Services.Abs
 {
-    internal interface ISchemaService
+    public interface ISchemaService
     {
-        // Task<IAsyncResult<T>> GetDataTypes<T>();
+        IReadOnlyList<string> GetDataTypes();
+
+        Task<IReadOnlyList<string>> GetDataTypesAsync(CancellationToken ct = default);
     }
 }

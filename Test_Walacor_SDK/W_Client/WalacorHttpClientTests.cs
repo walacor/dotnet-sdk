@@ -7,6 +7,7 @@ using Test_Walacor_SDK.W_Client.Helpers;
 using Walacor_SDK.Client;
 using Walacor_SDK.Client.Exceptions;
 using Walacor_SDK.Client.Serialization;
+using Walacor_SDK.W_Client.Options;
 using Xunit;
 
 namespace Test_Walacor_SDK.W_Client

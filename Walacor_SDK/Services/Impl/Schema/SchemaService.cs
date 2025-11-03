@@ -26,10 +26,10 @@ namespace Walacor_SDK.Services.Impl.Schema
         private readonly ClientContext _ctx;
         private readonly string _segment;
 
-        public SchemaService(ClientContext ctx, string segment = "schema")
+        public SchemaService(ClientContext ctx, string segment = "schemas")
         {
             this._ctx = ctx ?? throw new ArgumentNullException(nameof(ctx));
-            this._segment = string.IsNullOrWhiteSpace(segment) ? "schema" : segment.Trim('/');
+            this._segment = string.IsNullOrWhiteSpace(segment) ? "schemas" : segment.Trim('/');
         }
 
         public IReadOnlyList<string> GetDataTypes()
@@ -37,7 +37,7 @@ namespace Walacor_SDK.Services.Impl.Schema
 
         public async Task<IReadOnlyList<string>> GetDataTypesAsync(CancellationToken ct = default)
         {
-            var path = $"{this._segment}/datatypes";
+            var path = $"{this._segment}/dataTypes";
             var result = await this._ctx.Transport
                 .GetJsonAsync<List<string>>(path, query: null, ct)
                 .ConfigureAwait(false);

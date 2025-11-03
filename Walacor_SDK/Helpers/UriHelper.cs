@@ -22,7 +22,7 @@ namespace Walacor_SDK.Helpers
         {
             if (!baseUri.Contains("://"))
             {
-                baseUri = "https://" + baseUri;
+                baseUri = "http://" + baseUri;
             }
 
             var uri = new Uri(baseUri, UriKind.Absolute);

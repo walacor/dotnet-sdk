@@ -48,7 +48,7 @@ namespace Walacor_SDK
             }
 
             var normalizedBase = UriHelper.NormalizeBaseUri(baseUri);
-            var apiBase = UriHelper.BuildApiBaseUri(normalizedBase, "api");
+            var apiBase = UriHelper.BuildApiBaseUri(normalizedBase, "api/");
 
             var tokenProvider = new UsernamePasswordTokenProvider(normalizedBase, userName, password);
             var transport = new WalacorHttpClient(apiBase, tokenProvider, options);
@@ -65,7 +65,7 @@ namespace Walacor_SDK
             this._factory = new ServiceFactory(this._context);
         }
 
-        public ISchemaService SchemaService => this._factory.Get(ctx => new SchemaService(ctx, "schema"));
+        public ISchemaService SchemaService => this._factory.Get(ctx => new SchemaService(ctx, "schemas"));
 
         public void Dispose()
         {

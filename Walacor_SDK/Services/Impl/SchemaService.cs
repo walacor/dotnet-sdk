@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 using Walacor_SDK.Services.Abs;
 using Walacor_SDK.W_Client.Context;
 
-namespace Walacor_SDK.Services.Impl.Schema
+namespace Walacor_SDK.Services.Impl
 {
     internal sealed class SchemaService : ISchemaService
     {

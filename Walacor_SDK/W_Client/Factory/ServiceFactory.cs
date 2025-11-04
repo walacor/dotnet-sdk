@@ -17,7 +17,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using Walacor_SDK.W_Client.Context;
 
-namespace Walacor_SDK.Services.Factory
+namespace Walacor_SDK.W_Client.Factory
 {
     internal sealed class ServiceFactory
     {
@@ -48,7 +48,7 @@ namespace Walacor_SDK.Services.Factory
                             throw new InvalidOperationException($"Factory returned null for {typeof(TService).Name}.");
                         }
 
-                        return (object)instance;
+                        return instance;
                     },
                     LazyThreadSafetyMode.ExecutionAndPublication));
 

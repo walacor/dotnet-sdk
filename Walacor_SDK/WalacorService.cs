@@ -16,10 +16,10 @@ using System;
 using Walacor_SDK.Client;
 using Walacor_SDK.Helpers;
 using Walacor_SDK.Services.Abs;
-using Walacor_SDK.Services.Factory;
-using Walacor_SDK.Services.Impl.Schema;
+using Walacor_SDK.Services.Impl;
 using Walacor_SDK.W_Client.Auth;
 using Walacor_SDK.W_Client.Context;
+using Walacor_SDK.W_Client.Factory;
 using Walacor_SDK.W_Client.Options;
 
 namespace Walacor_SDK

@@ -12,13 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace Walacor_SDK.Client.Models
+namespace Walacor_SDK.Models.Results
 {
-    internal sealed class LoginDto
+    public sealed class ValidationError
     {
-        [JsonProperty("api_token")]
-        public string ApiToken { get; set; } = string.Empty;
+        public string Field { get; set; } = string.Empty;
+
+        public string Message { get; set; } = string.Empty;
     }
 }

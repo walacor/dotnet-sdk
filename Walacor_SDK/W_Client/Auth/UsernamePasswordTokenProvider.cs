@@ -18,7 +18,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Walacor_SDK.Client.Models;
+using Walacor_SDK.Models.Auth;
 using Walacor_SDK.W_Client.Abstractions;
 
 namespace Walacor_SDK.W_Client.Auth

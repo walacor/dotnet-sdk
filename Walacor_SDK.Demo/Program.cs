@@ -20,9 +20,16 @@ class Program
     {
         Console.WriteLine("Hello Walacor!");
         var svc = new WalacorService("44.203.135.89", "Admin", "GreenDoor99");
-
         var dataTypes = await svc.SchemaService.GetDataTypesAsync();
-        await Walacor_SDK.Tester.CallMeAsync();
+        if (dataTypes.IsSuccess)
+        {
+            Console.WriteLine("Success");
+        }
+        else
+        {
+            Console.WriteLine("False");
+        }
+        //await Walacor_SDK.Tester.CallMeAsync();
 
     }
 }

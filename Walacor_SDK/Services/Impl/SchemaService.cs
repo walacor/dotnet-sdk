@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Walacor_SDK.Models.Results;
 using Walacor_SDK.Services.Abs;
 using Walacor_SDK.W_Client.Context;
 
@@ -32,17 +33,19 @@ namespace Walacor_SDK.Services.Impl
             this._segment = string.IsNullOrWhiteSpace(segment) ? "schemas" : segment.Trim('/');
         }
 
-        public IReadOnlyList<string> GetDataTypes()
-            => this.GetDataTypesAsync().GetAwaiter().GetResult();
-
-        public async Task<IReadOnlyList<string>> GetDataTypesAsync(CancellationToken ct = default)
+        public async Task<Result<IReadOnlyList<string>>> GetDataTypesAsync(CancellationToken ct = default)
         {
             var path = $"{this._segment}/dataTypes";
-            var result = await this._ctx.Transport
+
+            // transport already returns Result<List<string>>
+            var res = await this._ctx.Transport
                 .GetJsonAsync<List<string>>(path, query: null, ct)
                 .ConfigureAwait(false);
 
-            return result;
+            // Optional: normalize to read-only and enforce non-empty, with your own error code/message
+            return res
+                .Map(list => (IReadOnlyList<string>)list.AsReadOnly())
+                .Ensure(list => list.Count > 0, "empty_list", "No data types were returned.");
         }
     }
 }

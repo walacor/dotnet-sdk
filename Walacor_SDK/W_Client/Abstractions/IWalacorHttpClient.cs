@@ -14,10 +14,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Walacor_SDK.Models.Results;
 
 namespace Walacor_SDK.W_Client.Abstractions
 {
@@ -29,46 +29,46 @@ namespace Walacor_SDK.W_Client.Abstractions
             HttpRequestMessage request,
             CancellationToken ct = default);
 
-        Task<T> GetJsonAsync<T>(
+        Task<Result<TResponse>> GetJsonAsync<TResponse>(
             string path,
             IDictionary<string, string>? query = null,
             CancellationToken ct = default);
 
-        Task<TResponse> PostJsonAsync<TRequest, TResponse>(
+        Task<Result<TResponse>> PostJsonAsync<TRequest, TResponse>(
             string path,
             TRequest body,
             CancellationToken ct = default);
 
-        Task<TResponse> PutJsonAsync<TRequest, TResponse>(
+        Task<Result<TResponse>> PutJsonAsync<TRequest, TResponse>(
             string path,
             TRequest body,
             CancellationToken ct = default);
 
-        Task DeleteAsync(
+        Task<Result<bool>> DeleteAsync(
             string path,
             CancellationToken ct = default);
 
-        Task<T> GetJsonWithHeadersAsync<T>(
+        Task<Result<TResponse>> GetJsonWithHeadersAsync<TResponse>(
             string path,
-            IDictionary<string, string>? query = null,
-            IDictionary<string, string>? headers = null,
-            CancellationToken ct = default);
-
-        Task<TResponse> PostJsonWithHeadersAsync<TRequest, TResponse>(
-            string path,
-            TRequest body,
             IDictionary<string, string>? query = null,
             IDictionary<string, string>? headers = null,
             CancellationToken ct = default);
 
-        Task<TResponse> PutJsonWithHeadersAsync<TRequest, TResponse>(
+        Task<Result<TResponse>> PostJsonWithHeadersAsync<TRequest, TResponse>(
             string path,
             TRequest body,
             IDictionary<string, string>? query = null,
             IDictionary<string, string>? headers = null,
             CancellationToken ct = default);
 
-        Task DeleteWithHeadersAsync(
+        Task<Result<TResponse>> PutJsonWithHeadersAsync<TRequest, TResponse>(
+            string path,
+            TRequest body,
+            IDictionary<string, string>? query = null,
+            IDictionary<string, string>? headers = null,
+            CancellationToken ct = default);
+
+        Task<Result<bool>> DeleteWithHeadersAsync(
             string path,
             IDictionary<string, string>? query = null,
             IDictionary<string, string>? headers = null,

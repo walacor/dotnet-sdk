@@ -12,15 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Walacor_SDK.Models.Results;
-
-namespace Walacor_SDK.Services.Abs
+namespace Walacor_SDK.Models.Results
 {
-    public interface ISchemaService
+    public sealed class BaseResponse<T>
     {
-        Task<Result<IReadOnlyList<string>>> GetDataTypesAsync(CancellationToken ct = default);
+        public bool Success { get; set; }
+
+        public T? Data { get; set; }
     }
 }

@@ -21,7 +21,6 @@ namespace Walacor_SDK.Models.Result
 {
     public sealed class Error
     {
-        // Constructors first (StyleCop ordering)
         public Error(string code, string message, string? target = null)
         {
             this.Code = code ?? throw new ArgumentNullException(nameof(code));
@@ -29,14 +28,12 @@ namespace Walacor_SDK.Models.Result
             this.Target = target;
         }
 
-        // Properties
         public string Code { get; }
 
         public string Message { get; }
 
         public string? Target { get; }
 
-        // Prefer collection abstractions; initialize with explicit comparer
         public IDictionary<string, object?> Details { get; } =
             new Dictionary<string, object?>(StringComparer.Ordinal);
 

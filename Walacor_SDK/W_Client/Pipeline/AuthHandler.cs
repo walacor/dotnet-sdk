@@ -43,7 +43,6 @@ namespace Walacor_SDK.Client.Pipeline
                 return response;
             }
 
-            // 401 Unauthorized - try to refresh token and retry once
             response.Dispose();
 
             await this._refreshLock.WaitAsync(ct).ConfigureAwait(false);

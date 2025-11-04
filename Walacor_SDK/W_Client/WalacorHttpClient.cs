@@ -14,16 +14,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Walacor_SDK.Client.Exceptions;
-using Walacor_SDK.Client.Pipeline;
 using Walacor_SDK.Client.Transport;
+using Walacor_SDK.Models.Result;
+using Walacor_SDK.Models.Results;
 using Walacor_SDK.W_Client.Abstractions;
+using Walacor_SDK.W_Client.Mappers;
 using Walacor_SDK.W_Client.Options;
 
 namespace Walacor_SDK.Client
@@ -66,124 +67,403 @@ namespace Walacor_SDK.Client
 
         public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct = default)
         {
+            return await this._http.SendAsync(request, HttpCompletionOption.ResponseContentRead, ct)
+                              .ConfigureAwait(false);
+        }
+
+        public async Task<Result<TResponse>> GetJsonAsync<TResponse>(
+            string path,
+            IDictionary<string, string>? query = null,
+            CancellationToken ct = default)
+        {
             try
             {
-                /*
-                 * when working on files
-                 * Small/normal JSON APIs → use ResponseContentRead (default).
-                 * Large/streaming data → use ResponseHeadersRead.
-                 */
-                var response = await this._http.SendAsync(request, HttpCompletionOption.ResponseContentRead, ct)
-                    .ConfigureAwait(false);
+                var uri = AppendQuery(path, query);
+                using var req = new HttpRequestMessage(HttpMethod.Get, uri);
+                req.Headers.Accept.ParseAdd("application/json");
 
-                await this.MapErrorsOrReturn(response).ConfigureAwait(false);
+                using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
 
-                return response;
+                var corrId = TryGetCorrelationId(res);
+                var status = (int)res.StatusCode;
+
+                if (status == 204)
+                {
+                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId);
+                }
+
+                var mediaType = res.Content.Headers.ContentType?.MediaType;
+                var body = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                if (res.IsSuccessStatusCode)
+                {
+                    if (string.IsNullOrWhiteSpace(body))
+                    {
+                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId);
+                    }
+
+                    if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
+                    }
+
+                    return ResponseMapper.FromEnvelope<TResponse>(
+                        body,
+                        s => this._json.Deserialize<TResponse>(s),
+                        status,
+                        corrId);
+                }
+
+                var err = HttpErrorMapper.FromStatus(status, body);
+                return Result<TResponse>.Fail(err, status, corrId);
             }
-            catch (OperationCanceledException)
+            catch (Exception ex)
             {
-                throw;
+                return ExceptionResult.From<TResponse>(ex);
             }
-            catch (HttpRequestException hre)
+        }
+
+        public async Task<Result<TResponse>> PostJsonAsync<TRequest, TResponse>(
+            string path,
+            TRequest body,
+            CancellationToken ct = default)
+        {
+            try
             {
-                var corr = ExtractCorrelation(hre);
-                throw new WalacorNetworkException("Network failure while sending HTTP request.", corr, hre);
+                var uri = AppendQuery(path, query: null);
+                using var req = new HttpRequestMessage(HttpMethod.Post, uri);
+                req.Headers.Accept.ParseAdd("application/json");
+                req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, "application/json");
+
+                using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
+
+                var corrId = TryGetCorrelationId(res);
+                var status = (int)res.StatusCode;
+
+                if (status == 204)
+                {
+                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId);
+                }
+
+                var mediaType = res.Content.Headers.ContentType?.MediaType;
+                var bodyText = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                if (res.IsSuccessStatusCode)
+                {
+                    if (string.IsNullOrWhiteSpace(bodyText))
+                    {
+                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId);
+                    }
+
+                    if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
+                    }
+
+                    return ResponseMapper.FromEnvelope<TResponse>(
+                        bodyText,
+                        s => this._json.Deserialize<TResponse>(s),
+                        status,
+                        corrId);
+                }
+
+                var err = HttpErrorMapper.FromStatus(status, bodyText);
+                return Result<TResponse>.Fail(err, status, corrId);
+            }
+            catch (Exception ex)
+            {
+                return ExceptionResult.From<TResponse>(ex);
             }
         }
 
-        public async Task<T> GetJsonAsync<T>(string path, IDictionary<string, string>? query = null, CancellationToken ct = default)
+        public async Task<Result<TResponse>> PutJsonAsync<TRequest, TResponse>(
+            string path,
+            TRequest body,
+            CancellationToken ct = default)
         {
-            var uri = AppendQuery(path, query);
-            using var req = new HttpRequestMessage(HttpMethod.Get, uri);
-            using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
-            var json = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            return this._json.Deserialize<T>(json)!;
+            try
+            {
+                var uri = AppendQuery(path, query: null);
+                using var req = new HttpRequestMessage(HttpMethod.Put, uri);
+                req.Headers.Accept.ParseAdd("application/json");
+                req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, "application/json");
+
+                using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
+
+                var corrId = TryGetCorrelationId(res);
+                var status = (int)res.StatusCode;
+
+                if (status == 204)
+                {
+                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId);
+                }
+
+                var mediaType = res.Content.Headers.ContentType?.MediaType;
+                var bodyText = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                if (res.IsSuccessStatusCode)
+                {
+                    if (string.IsNullOrWhiteSpace(bodyText))
+                    {
+                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId);
+                    }
+
+                    if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
+                    }
+
+                    return ResponseMapper.FromEnvelope<TResponse>(
+                        bodyText,
+                        s => this._json.Deserialize<TResponse>(s),
+                        status,
+                        corrId);
+                }
+
+                var err = HttpErrorMapper.FromStatus(status, bodyText);
+                return Result<TResponse>.Fail(err, status, corrId);
+            }
+            catch (Exception ex)
+            {
+                return ExceptionResult.From<TResponse>(ex);
+            }
         }
 
-        public async Task<TResponse> PostJsonAsync<TRequest, TResponse>(string path, TRequest body, CancellationToken ct = default)
+        public async Task<Result<bool>> DeleteAsync(
+            string path,
+            CancellationToken ct = default)
         {
-            using var req = new HttpRequestMessage(HttpMethod.Post, path);
-            req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, "application/json");
-            using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
-            var json = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            return this._json.Deserialize<TResponse>(json)!;
+            try
+            {
+                var uri = AppendQuery(path, query: null);
+                using var req = new HttpRequestMessage(HttpMethod.Delete, uri);
+                req.Headers.Accept.ParseAdd("application/json");
+
+                using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
+
+                var corrId = TryGetCorrelationId(res);
+                var status = (int)res.StatusCode;
+
+                if (res.IsSuccessStatusCode || status == 204)
+                {
+                    return Result<bool>.Success(true, status, corrId);
+                }
+
+                var bodyText = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var err = HttpErrorMapper.FromStatus(status, bodyText);
+                return Result<bool>.Fail(err, status, corrId);
+            }
+            catch (Exception ex)
+            {
+                return ExceptionResult.From<bool>(ex);
+            }
         }
 
-        public async Task<TResponse> PutJsonAsync<TRequest, TResponse>(string path, TRequest body, CancellationToken ct = default)
-        {
-            using var req = new HttpRequestMessage(HttpMethod.Put, path);
-            req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, "application/json");
-            using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
-            var json = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            return this._json.Deserialize<TResponse>(json)!;
-        }
-
-        public async Task DeleteAsync(string path, CancellationToken ct = default)
-        {
-            using var req = new HttpRequestMessage(HttpMethod.Delete, path);
-            using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
-        }
-
-        public async Task<T> GetJsonWithHeadersAsync<T>(
+        public async Task<Result<TResponse>> GetJsonWithHeadersAsync<TResponse>(
            string path,
            IDictionary<string, string>? query = null,
            IDictionary<string, string>? headers = null,
            CancellationToken ct = default)
         {
-            var uri = AppendQuery(path, query);
-            using var req = new HttpRequestMessage(HttpMethod.Get, uri);
-            ApplyHeaders(req, headers);
+            try
+            {
+                var uri = AppendQuery(path, query);
+                using var req = new HttpRequestMessage(HttpMethod.Get, uri);
+                req.Headers.Accept.ParseAdd("application/json");
+                ApplyHeaders(req, headers);
 
-            using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
-            var json = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            return this._json.Deserialize<T>(json)!;
+                using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
+
+                var corrId = TryGetCorrelationId(res);
+                var status = (int)res.StatusCode;
+
+                if (status == 204)
+                {
+                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId);
+                }
+
+                var mediaType = res.Content.Headers.ContentType?.MediaType;
+                var bodyText = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                if (res.IsSuccessStatusCode)
+                {
+                    if (string.IsNullOrWhiteSpace(bodyText))
+                    {
+                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId);
+                    }
+
+                    if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
+                    }
+
+                    return ResponseMapper.FromEnvelope<TResponse>(
+                        bodyText,
+                        s => this._json.Deserialize<TResponse>(s),
+                        status,
+                        corrId);
+                }
+
+                var err = HttpErrorMapper.FromStatus(status, bodyText);
+                return Result<TResponse>.Fail(err, status, corrId);
+            }
+            catch (Exception ex)
+            {
+                return ExceptionResult.From<TResponse>(ex);
+            }
         }
 
-        public async Task<TResponse> PostJsonWithHeadersAsync<TRequest, TResponse>(
+        public async Task<Result<TResponse>> PostJsonWithHeadersAsync<TRequest, TResponse>(
             string path,
             TRequest body,
             IDictionary<string, string>? query = null,
             IDictionary<string, string>? headers = null,
             CancellationToken ct = default)
         {
-            var uri = AppendQuery(path, query);
-            using var req = new HttpRequestMessage(HttpMethod.Post, uri);
-            req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, "application/json");
-            ApplyHeaders(req, headers);
+            try
+            {
+                var uri = AppendQuery(path, query);
+                using var req = new HttpRequestMessage(HttpMethod.Post, uri);
+                req.Headers.Accept.ParseAdd("application/json");
+                req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, "application/json");
+                ApplyHeaders(req, headers);
 
-            using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
-            var json = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            return this._json.Deserialize<TResponse>(json)!;
+                using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
+
+                var corrId = TryGetCorrelationId(res);
+                var status = (int)res.StatusCode;
+
+                if (status == 204)
+                {
+                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId);
+                }
+
+                var mediaType = res.Content.Headers.ContentType?.MediaType;
+                var bodyText = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                if (res.IsSuccessStatusCode)
+                {
+                    if (string.IsNullOrWhiteSpace(bodyText))
+                    {
+                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId);
+                    }
+
+                    if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
+                    }
+
+                    return ResponseMapper.FromEnvelope<TResponse>(
+                        bodyText,
+                        s => this._json.Deserialize<TResponse>(s),
+                        status,
+                        corrId);
+                }
+
+                var err = HttpErrorMapper.FromStatus(status, bodyText);
+                return Result<TResponse>.Fail(err, status, corrId);
+            }
+            catch (Exception ex)
+            {
+                return ExceptionResult.From<TResponse>(ex);
+            }
         }
 
-        public async Task<TResponse> PutJsonWithHeadersAsync<TRequest, TResponse>(
+        public async Task<Result<TResponse>> PutJsonWithHeadersAsync<TRequest, TResponse>(
             string path,
             TRequest body,
             IDictionary<string, string>? query = null,
             IDictionary<string, string>? headers = null,
             CancellationToken ct = default)
         {
-            var uri = AppendQuery(path, query);
-            using var req = new HttpRequestMessage(HttpMethod.Put, uri);
-            req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, "application/json");
-            ApplyHeaders(req, headers);
+            try
+            {
+                var uri = AppendQuery(path, query);
+                using var req = new HttpRequestMessage(HttpMethod.Put, uri);
+                req.Headers.Accept.ParseAdd("application/json");
+                req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, "application/json");
+                ApplyHeaders(req, headers);
 
-            using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
-            var json = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            return this._json.Deserialize<TResponse>(json)!;
+                using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
+
+                var corrId = TryGetCorrelationId(res);
+                var status = (int)res.StatusCode;
+
+                if (status == 204)
+                {
+                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId);
+                }
+
+                var mediaType = res.Content.Headers.ContentType?.MediaType;
+                var bodyText = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                if (res.IsSuccessStatusCode)
+                {
+                    if (string.IsNullOrWhiteSpace(bodyText))
+                    {
+                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId);
+                    }
+
+                    if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
+                    }
+
+                    return ResponseMapper.FromEnvelope<TResponse>(
+                        bodyText,
+                        s => this._json.Deserialize<TResponse>(s),
+                        status,
+                        corrId);
+                }
+
+                var err = HttpErrorMapper.FromStatus(status, bodyText);
+                return Result<TResponse>.Fail(err, status, corrId);
+            }
+            catch (TaskCanceledException)
+            {
+                return Result<TResponse>.Fail(Error.Timeout(), null, null);
+            }
+            catch (HttpRequestException)
+            {
+                return Result<TResponse>.Fail(Error.Network(), null, null);
+            }
+            catch (Exception)
+            {
+                return Result<TResponse>.Fail(Error.Unknown(), null, null);
+            }
         }
 
-        public async Task DeleteWithHeadersAsync(
+        public async Task<Result<bool>> DeleteWithHeadersAsync(
             string path,
             IDictionary<string, string>? query = null,
             IDictionary<string, string>? headers = null,
             CancellationToken ct = default)
         {
-            var uri = AppendQuery(path, query);
-            using var req = new HttpRequestMessage(HttpMethod.Delete, uri);
-            ApplyHeaders(req, headers);
+            try
+            {
+                var uri = AppendQuery(path, query);
+                using var req = new HttpRequestMessage(HttpMethod.Delete, uri);
+                req.Headers.Accept.ParseAdd("application/json");
+                ApplyHeaders(req, headers);
 
-            using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
+                using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
+
+                var corrId = TryGetCorrelationId(res);
+                var status = (int)res.StatusCode;
+
+                if (res.IsSuccessStatusCode || status == 204)
+                {
+                    return Result<bool>.Success(true, status, corrId);
+                }
+
+                var bodyText = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var err = HttpErrorMapper.FromStatus(status, bodyText);
+                return Result<bool>.Fail(err, status, corrId);
+            }
+            catch (Exception ex)
+            {
+                return ExceptionResult.From<bool>(ex);
+            }
         }
 
         private static void ApplyHeaders(HttpRequestMessage req, IDictionary<string, string>? headers)
@@ -207,67 +487,6 @@ namespace Walacor_SDK.Client
                 req.Headers.Remove(name);
                 req.Headers.TryAddWithoutValidation(name, value);
             }
-        }
-
-        private async Task MapErrorsOrReturn(HttpResponseMessage res)
-        {
-            if ((int)res.StatusCode == 422 && this._opts.ThrowOnValidation422)
-            {
-                var body = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                var corr = ExtractCorrelation(res);
-                throw new WalacorValidationException("Validation failed (422).", body, corr);
-            }
-
-            if ((int)res.StatusCode < 400)
-            {
-                return;
-            }
-
-            var correlation = ExtractCorrelation(res);
-            var bodyText = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-            if (res.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                throw new WalacorAuthException("Unauthorized after token refresh.", correlation);
-            }
-
-            if ((int)res.StatusCode >= 500)
-            {
-                throw new WalacorServerException("Server error.", res.StatusCode, bodyText, correlation);
-            }
-
-            throw new WalacorRequestException("Request failed.", res.StatusCode, bodyText, correlation);
-        }
-
-#pragma warning disable SA1204
-        private static string? ExtractCorrelation(HttpResponseMessage res)
-#pragma warning restore SA1204
-        {
-            if (res.RequestMessage?.Properties != null &&
-                res.RequestMessage.Properties.TryGetValue(CorrelationLoggingHandler.CorrelationKey, out var v))
-            {
-                return v as string;
-            }
-
-            if (res.Headers.TryGetValues(CorrelationLoggingHandler.CorrelationHeader, out var vals))
-            {
-                foreach (var x in vals)
-                {
-                    return x;
-                }
-            }
-
-            return null;
-        }
-
-        private static string? ExtractCorrelation(Exception ex)
-        {
-            if (ex.Data.Contains(CorrelationLoggingHandler.CorrelationKey))
-            {
-                return ex.Data[CorrelationLoggingHandler.CorrelationKey]?.ToString();
-            }
-
-            return null;
         }
 
         private static string AppendQuery(string path, IDictionary<string, string>? query)
@@ -294,6 +513,16 @@ namespace Walacor_SDK.Client
             }
 
             return sb.ToString();
+        }
+
+        private static string? TryGetCorrelationId(HttpResponseMessage res)
+        {
+            if (res.Headers.TryGetValues("X-Request-ID", out var vals))
+            {
+                return vals.FirstOrDefault();
+            }
+
+            return null;
         }
 
 #pragma warning disable SA1202

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using Walacor_SDK.Models.Results;
@@ -43,6 +44,41 @@ namespace Walacor_SDK.Services.Impl
                 .ConfigureAwait(false);
 
             return res.Map(list => (IReadOnlyList<DataTypeDto>)list.AsReadOnly());
+        }
+
+        public async Task<Result<IReadOnlyDictionary<string, AutoGenFieldDto>>> GetPlatformAutoGenerationFieldsAsync(
+         CancellationToken ct = default)
+        {
+            var path = $"{this._segment}/systemFields";
+
+            var res = await this._ctx.Transport
+                .GetJsonAsync<Dictionary<string, AutoGenFieldDto>>(path, query: null, ct)
+                .ConfigureAwait(false);
+
+            return res.Map(dict =>
+                (IReadOnlyDictionary<string, AutoGenFieldDto>)new ReadOnlyDictionary<string, AutoGenFieldDto>(dict));
+        }
+
+        public async Task<Result<IReadOnlyList<SchemaEntryDto>>> GetListWithLatestVersionAsync(CancellationToken ct = default)
+        {
+            var path = $"{this._segment}/versions/latest";
+
+            var res = await this._ctx.Transport
+                .GetJsonAsync<List<SchemaEntryDto>>(path, query: null, ct)
+                .ConfigureAwait(false);
+
+            return res.Map(list => (IReadOnlyList<SchemaEntryDto>)list.AsReadOnly());
+        }
+
+        public async Task<Result<IReadOnlyList<SchemaVersionEntryDto>>> GetVersionsAsync(CancellationToken ct = default)
+        {
+            var path = $"{this._segment}/versions";
+
+            var res = await this._ctx.Transport
+                .GetJsonAsync<List<SchemaVersionEntryDto>>(path, query: null, ct)
+                .ConfigureAwait(false);
+
+            return res.Map(list => (IReadOnlyList<SchemaVersionEntryDto>)list.AsReadOnly());
         }
     }
 }

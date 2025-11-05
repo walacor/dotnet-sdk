@@ -50,15 +50,14 @@ namespace Walacor_SDK.W_Client.Auth
             };
         }
 
-        public Task<string> GetTokenAsync(CancellationToken ct = default)
+        public async Task<string> GetTokenAsync(CancellationToken ct = default)
         {
-            // Return cached token if present; otherwise force a refresh.
             if (!string.IsNullOrEmpty(this._token))
             {
-                return Task.FromResult(this._token);
+                return this._token;
             }
 
-            return this.RefreshTokenAsync(ct);
+            return await this.RefreshTokenAsync(ct).ConfigureAwait(false);
         }
 
         public async Task<string> RefreshTokenAsync(CancellationToken ct = default)

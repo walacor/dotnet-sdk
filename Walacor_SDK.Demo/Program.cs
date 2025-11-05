@@ -22,9 +22,14 @@ class Program
         var svc = new WalacorService("44.203.135.89", "Admin", "GreenDoor99");
 
         var dataTypes = await svc.SchemaService.GetDataTypesAsync();
+        var pagf = await svc.SchemaService.GetPlatformAutoGenerationFieldsAsync();
+        var llv = await svc.SchemaService.GetListWithLatestVersionAsync();
+        var versions = await svc.SchemaService.GetVersionsAsync();
 
-        Console.WriteLine(dataTypes);
-        //await Walacor_SDK.Tester.CallMeAsync();
 
+        Console.WriteLine(dataTypes.Value);
+        Console.WriteLine(pagf.Value);
+        Console.WriteLine(llv.Value);
+        Console.WriteLine(versions.Value);
     }
 }

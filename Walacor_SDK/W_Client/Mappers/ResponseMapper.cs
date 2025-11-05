@@ -20,44 +20,25 @@ namespace Walacor_SDK.W_Client.Mappers
 {
     internal static class ResponseMapper
     {
-        public static Result<T> FromEnvelope<T>(
+        public static Result<T> FromSuccessEnvelope<T>(
             string json,
-            Func<string, T?> deserialize,
+            Func<string, BaseResponse<T>?> deserializeEnvelope,
             int statusCode,
             string? correlationId)
         {
             try
             {
-                var envelope = deserialize(json) as dynamic;
-
-                if (envelope is BaseResponse<T> b)
+                var env = deserializeEnvelope(json);
+                if (env != null && env.Success && env.Data != null)
                 {
-                    if (b.Success && b.Data is not null)
-                    {
-                        return Result<T>.Success(b.Data, statusCode, correlationId);
-                    }
-
-                    return Result<T>.Fail(Error.Server("Operation failed."), statusCode, correlationId);
+                    return Result<T>.Success(env.Data, statusCode, correlationId);
                 }
+
+                return Result<T>.Fail(Error.Deserialization("Envelope missing data or not successful."), statusCode, correlationId);
             }
             catch
             {
-                // fall through → try plain T
-            }
-
-            try
-            {
-                var value = deserialize(json);
-                if (value is not null)
-                {
-                    return Result<T>.Success(value, statusCode, correlationId);
-                }
-
-                return Result<T>.Fail(Error.Deserialization(), statusCode, correlationId);
-            }
-            catch
-            {
-                return Result<T>.Fail(Error.Deserialization(), statusCode, correlationId);
+                return Result<T>.Fail(Error.Deserialization("Invalid envelope format."), statusCode, correlationId);
             }
         }
     }

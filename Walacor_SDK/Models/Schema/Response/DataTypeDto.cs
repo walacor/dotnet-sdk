@@ -1,6 +1,6 @@
 // Copyright 2025 Walacor Corporation
 //
-// Licensed under the Apache License, Version 2.0 (the "License")
+// Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
@@ -12,15 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using Xunit;
-
-public class MatrixProofTests
+namespace Walacor_SDK.Models.Schema.Response
 {
-    [Fact]
-    public void Always_Passes()
+    public sealed class DataTypeDto
     {
-        Assert.True(true);
-    }
+        public string Name { get; set; } = string.Empty;
 
+        public object DefaultValue { get; set; } = string.Empty;
+
+        public int? MinValue { get; set; }
+
+        public int? MaxValue { get; set; }
+
+        public int? MinLength { get; set; }
+
+        public int? MaxLength { get; set; }
+
+        public string Type { get; set; } = string.Empty;
+    }
 }

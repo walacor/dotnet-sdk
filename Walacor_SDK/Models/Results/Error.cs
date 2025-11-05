@@ -40,8 +40,6 @@ namespace Walacor_SDK.Models.Result
         public IList<ValidationError> ValidationErrors { get; } =
             new List<ValidationError>();
 
-        // Blank line separating elements
-
         // Factory helpers
         public static Error Validation(string code = "validation_failed", string message = "Validation failed.")
         {
@@ -83,7 +81,6 @@ namespace Walacor_SDK.Models.Result
             return new Error("unknown_error", message);
         }
 
-        // Methods after properties/factories
         public string ToUserMessage()
         {
             if (this.ValidationErrors.Count > 0)

@@ -36,8 +36,4 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Walacor_SDK\Walacor_SDK.csproj" />
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Services\" />
-	</ItemGroup>
 </Project>

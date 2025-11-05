@@ -107,9 +107,9 @@ namespace Walacor_SDK.Client
                         return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
                     }
 
-                    return ResponseMapper.FromEnvelope<TResponse>(
+                    return ResponseMapper.FromSuccessEnvelope<TResponse>(
                         body,
-                        s => this._json.Deserialize<TResponse>(s),
+                        s => this._json.Deserialize<BaseResponse<TResponse>>(s),
                         status,
                         corrId);
                 }
@@ -160,9 +160,9 @@ namespace Walacor_SDK.Client
                         return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
                     }
 
-                    return ResponseMapper.FromEnvelope<TResponse>(
+                    return ResponseMapper.FromSuccessEnvelope<TResponse>(
                         bodyText,
-                        s => this._json.Deserialize<TResponse>(s),
+                        s => this._json.Deserialize<BaseResponse<TResponse>>(s),
                         status,
                         corrId);
                 }
@@ -213,9 +213,9 @@ namespace Walacor_SDK.Client
                         return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
                     }
 
-                    return ResponseMapper.FromEnvelope<TResponse>(
+                    return ResponseMapper.FromSuccessEnvelope<TResponse>(
                         bodyText,
-                        s => this._json.Deserialize<TResponse>(s),
+                        s => this._json.Deserialize<BaseResponse<TResponse>>(s),
                         status,
                         corrId);
                 }
@@ -297,9 +297,9 @@ namespace Walacor_SDK.Client
                         return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
                     }
 
-                    return ResponseMapper.FromEnvelope<TResponse>(
+                    return ResponseMapper.FromSuccessEnvelope<TResponse>(
                         bodyText,
-                        s => this._json.Deserialize<TResponse>(s),
+                        s => this._json.Deserialize<BaseResponse<TResponse>>(s),
                         status,
                         corrId);
                 }
@@ -353,9 +353,9 @@ namespace Walacor_SDK.Client
                         return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
                     }
 
-                    return ResponseMapper.FromEnvelope<TResponse>(
+                    return ResponseMapper.FromSuccessEnvelope<TResponse>(
                         bodyText,
-                        s => this._json.Deserialize<TResponse>(s),
+                        s => this._json.Deserialize<BaseResponse<TResponse>>(s),
                         status,
                         corrId);
                 }
@@ -409,9 +409,9 @@ namespace Walacor_SDK.Client
                         return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
                     }
 
-                    return ResponseMapper.FromEnvelope<TResponse>(
+                    return ResponseMapper.FromSuccessEnvelope<TResponse>(
                         bodyText,
-                        s => this._json.Deserialize<TResponse>(s),
+                        s => this._json.Deserialize<BaseResponse<TResponse>>(s),
                         status,
                         corrId);
                 }

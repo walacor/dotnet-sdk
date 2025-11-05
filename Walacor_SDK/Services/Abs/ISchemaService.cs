@@ -16,11 +16,12 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Walacor_SDK.Models.Results;
+using Walacor_SDK.Models.Schema.Response;
 
 namespace Walacor_SDK.Services.Abs
 {
     public interface ISchemaService
     {
-        Task<Result<IReadOnlyList<string>>> GetDataTypesAsync(CancellationToken ct = default);
+        Task<Result<IReadOnlyList<DataTypeDto>>> GetDataTypesAsync(CancellationToken ct = default);
     }
 }

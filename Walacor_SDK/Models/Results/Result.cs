@@ -44,7 +44,6 @@ namespace Walacor_SDK.Models.Results
         public static Result<T> Fail(Error error, int? statusCode = null, string? correlationId = null)
             => new(false, default, error, statusCode, correlationId);
 
-        // Ergonomics
         public void Deconstruct(out bool ok, out T? val, out Error? err)
         {
             ok = this.IsSuccess;

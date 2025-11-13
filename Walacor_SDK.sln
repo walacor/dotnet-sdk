@@ -24,6 +24,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{86D60A25-AFEC-4D17-A9D8-8CD029B693AE}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		.gitignore = .gitignore
 		Directory.Build.props = Directory.Build.props
 		stylecop.json = stylecop.json
 	EndProjectSection

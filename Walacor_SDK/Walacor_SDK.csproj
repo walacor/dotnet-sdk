@@ -63,6 +63,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Services\Impl\Schema\Models\" />
+    <Folder Include="Models\DataRequests\Request\" />
   </ItemGroup>
 </Project>

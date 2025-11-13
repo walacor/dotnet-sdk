@@ -7,6 +7,7 @@ using Test_Walacor_SDK.W_Client.Helpers;
 using Walacor_SDK.Client;
 using Walacor_SDK.Client.Exceptions;
 using Walacor_SDK.Client.Serialization;
+using Walacor_SDK.W_Client.Options;
 using Xunit;
 
 namespace Test_Walacor_SDK.W_Client
@@ -25,11 +26,13 @@ namespace Test_Walacor_SDK.W_Client
 
 
         [Fact]
-        public async Task Throws_WalacorValidationException_on_422_when_enabled()
+        public async Task Returns_failed_Result_on_422_when_enabled()
         {
             var fake = new FakeHttpHandler();
             var resp422 = new HttpResponseMessage((HttpStatusCode)422)
-            { Content = new StringContent(@"{""errors"":{""Name"":[""Required""]}}") };
+            {
+                Content = new StringContent(@"{""errors"":{""Name"":[""Required""]}}")
+            };
             fake.Enqueue(resp422);
 
             var http = new HttpClient(fake) { BaseAddress = new Uri("https://example.test/") };
@@ -38,9 +41,16 @@ namespace Test_Walacor_SDK.W_Client
 
             var client = new WalacorHttpClient(http, json, opts);
 
-            Func<Task> act = async () =>
-                await client.PostJsonAsync<SampleReq, SampleResp>("items", new SampleReq { Name = "" });
-            await act.Should().ThrowAsync<WalacorValidationException>();
+            var result = await client.PostJsonAsync<SampleReq, SampleResp>(
+                "items",
+                new SampleReq { Name = "" }
+            );
+
+            result.IsSuccess.Should().BeFalse("422 should return a failed result");
+            result.StatusCode.Should().Be(422);
+            result.Error.Should().NotBeNull();
+            result.Error!.Code.Should().Be("unknown_error");
+            result.Error!.Message.Should().Contain("422");
         }
 
         [Fact]

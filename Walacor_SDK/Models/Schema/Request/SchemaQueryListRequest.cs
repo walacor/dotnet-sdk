@@ -13,20 +13,24 @@
 // limitations under the License.
 
 using System;
-using Walacor_SDK.W_Client.Abstractions;
+using Walacor_SDK.Enums;
 
-namespace Walacor_SDK.Client.Strategies
+namespace Walacor_SDK.Models.Schema.Request
 {
-    internal sealed class ExponentialJitterBackoff(TimeSpan? baseDelay = null) : IBackoffStrategy
+    public sealed class SchemaQueryListRequest
     {
-        private readonly TimeSpan _baseDelay = baseDelay ?? TimeSpan.FromMilliseconds(200);
-        private readonly Random _rng = new Random();
+        public int? Page { get; set; } = 1;
 
-        public TimeSpan ComputeDelay(int attempt)
-        {
-            var max = this._baseDelay.TotalMilliseconds * Math.Pow(2, Math.Max(0, attempt - 1));
-            var ms = this._rng.NextDouble() * Math.Min(max, 20);
-            return TimeSpan.FromMilliseconds(ms);
-        }
+        public int? PageSize { get; set; } = 10;
+
+        public SortOrder? Order { get; set; } = SortOrder.Desc;
+
+        public string? OrderBy { get; set; } = "Family";
+
+        public DateTimeOffset? StartDate { get; set; }
+
+        public DateTimeOffset? EndDate { get; set; }
+
+        public string? Search { get; set; }
     }
 }

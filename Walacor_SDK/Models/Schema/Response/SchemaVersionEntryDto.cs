@@ -12,18 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.Text;
+using Newtonsoft.Json;
 
-namespace Walacor_SDK
+namespace Walacor_SDK.Models.Schema.Response
 {
-    /// <summary>
-    /// Any URI goes here we need to make sure to attach the api
-    /// This will lazy load the services set up the http client as Singleton
-    /// and pass it to the services TODO.
-    /// </summary>
-    internal class Facade
+    public sealed class SchemaVersionEntryDto
     {
+        public long ETId { get; set; }
+
+        [JsonProperty("versions")]
+        public IList<long> Versions { get; set; } = new List<long>();
     }
 }

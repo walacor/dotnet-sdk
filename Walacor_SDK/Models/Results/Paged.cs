@@ -13,20 +13,26 @@
 // limitations under the License.
 
 using System;
-using Walacor_SDK.W_Client.Abstractions;
+using System.Collections.Generic;
 
-namespace Walacor_SDK.Client.Strategies
+namespace Walacor_SDK.Models.Results
 {
-    internal sealed class ExponentialJitterBackoff(TimeSpan? baseDelay = null) : IBackoffStrategy
+    public sealed class Paged<T>
     {
-        private readonly TimeSpan _baseDelay = baseDelay ?? TimeSpan.FromMilliseconds(200);
-        private readonly Random _rng = new Random();
-
-        public TimeSpan ComputeDelay(int attempt)
+        public Paged(IReadOnlyList<T> data, int total)
         {
-            var max = this._baseDelay.TotalMilliseconds * Math.Pow(2, Math.Max(0, attempt - 1));
-            var ms = this._rng.NextDouble() * Math.Min(max, 20);
-            return TimeSpan.FromMilliseconds(ms);
+            this.Data = data ?? Array.Empty<T>();
+            this.Total = total;
+        }
+
+        public IReadOnlyList<T> Data { get; }
+
+        public int Total { get; }
+
+        public void Deconstruct(out IReadOnlyList<T> data, out int total)
+        {
+            data = this.Data;
+            total = this.Total;
         }
     }
 }

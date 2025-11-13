@@ -13,18 +13,19 @@
 // limitations under the License.
 
 using System;
-using Walacor_SDK.Services.Abs;
-using Walacor_SDK.W_Client.Abstractions;
+using System.Collections.Generic;
+using System.Text;
 
-namespace Walacor_SDK.Services.Impl.Schema
+namespace Walacor_SDK.Models.DataRequests.Response
 {
-    internal class SchemaService : ISchemaService
+    public sealed class SubmissionResult
     {
-        private readonly IWalacorHttpClient _client;
+        public string EId { get; set; } = string.Empty;
 
-        public SchemaService(IWalacorHttpClient client)
-        {
-            this._client = client ?? throw new ArgumentNullException(nameof(client));
-        }
+        public int ETId { get; set; }
+
+        public int ES { get; set; }
+
+        public IList<string> UID { get; set; } = new List<string>();
     }
 }

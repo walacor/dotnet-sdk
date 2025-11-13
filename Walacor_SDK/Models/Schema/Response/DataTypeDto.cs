@@ -12,16 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
-namespace Walacor_SDK.Client
+namespace Walacor_SDK.Models.Schema.Response
 {
-    public sealed class WalacorHttpClientOptions
+    public sealed class DataTypeDto
     {
-        public int MaxRetries { get; set; } = 2;
+        public string Name { get; set; } = string.Empty;
 
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(100);
+        public object DefaultValue { get; set; } = string.Empty;
 
-        public bool ThrowOnValidation422 { get; set; } = true;
+        public int? MinValue { get; set; }
+
+        public int? MaxValue { get; set; }
+
+        public int? MinLength { get; set; }
+
+        public int? MaxLength { get; set; }
+
+        public string Type { get; set; } = string.Empty;
     }
 }

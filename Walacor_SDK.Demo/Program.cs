@@ -21,7 +21,7 @@ class Program
     public static async Task Main(string[] args)
     {
         Console.WriteLine("Hello Walacor!");
-        var svc = new WalacorService("x", "y", "z123");
+        var svc = new WalacorService("x", "y", "z");
 
         //var dataTypes = await svc.SchemaService.GetDataTypesAsync();
         //var pagf = await svc.SchemaService.GetPlatformAutoGenerationFieldsAsync();

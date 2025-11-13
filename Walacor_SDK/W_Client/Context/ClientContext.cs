@@ -13,8 +13,8 @@
 // limitations under the License.
 
 using System;
-using Walacor_SDK.Helpers;
 using Walacor_SDK.W_Client.Abstractions;
+using Walacor_SDK.W_Client.Helpers;
 using Walacor_SDK.W_Client.Options;
 
 namespace Walacor_SDK.W_Client.Context

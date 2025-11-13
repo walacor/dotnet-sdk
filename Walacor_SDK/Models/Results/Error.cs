@@ -40,7 +40,6 @@ namespace Walacor_SDK.Models.Result
         public IList<ValidationError> ValidationErrors { get; } =
             new List<ValidationError>();
 
-        // Factory helpers
         public static Error Validation(string code = "validation_failed", string message = "Validation failed.")
         {
             return new Error(code, message);

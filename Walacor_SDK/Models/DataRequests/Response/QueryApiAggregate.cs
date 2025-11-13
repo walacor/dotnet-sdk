@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Walacor_SDK.Enums;
+using System.Collections.Generic;
 
-namespace Walacor_SDK.Models.Schema.Request
+namespace Walacor_SDK.Models.DataRequests.Response
 {
-    public class CreateSchemaRequest
+    public sealed class QueryApiAggregate
     {
-        public SystemEnvelopeType ETId { get; set; } = SystemEnvelopeType.Schema;
+        public IList<Dictionary<string, object>> Records { get; set; } = new List<Dictionary<string, object>>();
 
-        public int SV { get; set; } = 1;
-
-        public CreateSchemaDefinition Schema { get; set; } = default!;
+        public int Total { get; set; }
     }
 }

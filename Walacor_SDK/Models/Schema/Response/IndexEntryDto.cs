@@ -12,13 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Newtonsoft.Json;
 
 namespace Walacor_SDK.Models.Schema.Response
 {
-    public class IndexEntryDto
+    public sealed class IndexEntryDto
     {
+        [JsonProperty("v")]
+        public int Version { get; set; }
+
+        public IndexKeyDto Key { get; set; } = new IndexKeyDto();
+
+        public string Name { get; set; } = string.Empty;
+
+        [JsonProperty("ns")]
+        public string Namespace { get; set; } = string.Empty;
     }
 }

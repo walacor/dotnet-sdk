@@ -24,21 +24,30 @@ namespace Walacor_SDK.W_Client.Mappers
             string json,
             Func<string, BaseResponse<T>?> deserializeEnvelope,
             int statusCode,
-            string? correlationId)
+            string? correlationId,
+            long? durationMs = null)
         {
             try
             {
                 var env = deserializeEnvelope(json);
                 if (env != null && env.Success && env.Data != null)
                 {
-                    return Result<T>.Success(env.Data, statusCode, correlationId);
+                    return Result<T>.Success(env.Data, statusCode, correlationId, durationMs);
                 }
 
-                return Result<T>.Fail(Error.Deserialization("Envelope missing data or not successful."), statusCode, correlationId);
+                return Result<T>.Fail(
+                    Error.Deserialization("Envelope missing data or not successful."),
+                    statusCode,
+                    correlationId,
+                    durationMs);
             }
             catch
             {
-                return Result<T>.Fail(Error.Deserialization("Invalid envelope format."), statusCode, correlationId);
+                return Result<T>.Fail(
+                    Error.Deserialization("Invalid envelope format."),
+                    statusCode,
+                    correlationId,
+                    durationMs);
             }
         }
     }

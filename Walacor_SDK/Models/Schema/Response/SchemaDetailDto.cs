@@ -12,13 +12,54 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.Text;
+using Newtonsoft.Json;
 
 namespace Walacor_SDK.Models.Schema.Response
 {
-    public class SchemaDetailDto
+    public sealed class SchemaDetailDto
     {
+        [JsonProperty("_id")]
+        public string Id { get; set; } = string.Empty;
+
+        public int ETId { get; set; }
+
+        public string TableName { get; set; } = string.Empty;
+
+        public string Family { get; set; } = string.Empty;
+
+        public bool DoSummary { get; set; }
+
+        public string Description { get; set; } = string.Empty;
+
+        public IList<SchemaFieldDto> Fields { get; set; } = new List<SchemaFieldDto>();
+
+        public IList<SchemaIndexItemDto> Indexes { get; set; } = new List<SchemaIndexItemDto>();
+
+        public string DbTableName { get; set; } = string.Empty;
+
+        public string DbHistoryTableName { get; set; } = string.Empty;
+
+        public int SV { get; set; }
+
+        public string LastModifiedBy { get; set; } = string.Empty;
+
+        public string UID { get; set; } = string.Empty;
+
+        public string ORGId { get; set; } = string.Empty;
+
+        public string SL { get; set; } = string.Empty;
+
+        public string HashSign { get; set; } = string.Empty;
+
+        public string HS { get; set; } = string.Empty;
+
+        public string EId { get; set; } = string.Empty;
+
+        public long UpdatedAt { get; set; }
+
+        public bool IsDeleted { get; set; }
+
+        public long CreatedAt { get; set; }
     }
 }

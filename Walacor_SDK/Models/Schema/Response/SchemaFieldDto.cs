@@ -12,16 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Walacor_SDK.Enums;
-
-namespace Walacor_SDK.Models.Schema.Request
+namespace Walacor_SDK.Models.Schema.Response
 {
-    public class CreateSchemaRequest
+    public sealed class SchemaFieldDto
     {
-        public SystemEnvelopeType ETId { get; set; } = SystemEnvelopeType.Schema;
+        public string FieldName { get; set; } = string.Empty;
 
-        public int SV { get; set; } = 1;
+        public string DataType { get; set; } = string.Empty;
 
-        public CreateSchemaDefinition Schema { get; set; } = default!;
+        public int? MaxLength { get; set; }
+
+        public bool? Required { get; set; } = false;
+
+        public object? Default { get; set; }
+
+        public int? Decimals { get; set; }
+
+        public bool? SystemGenerated { get; set; } = false;
     }
 }

@@ -14,7 +14,7 @@
 
 using System;
 
-namespace Walacor_SDK.Helpers
+namespace Walacor_SDK.W_Client.Helpers
 {
     public static class UriHelper
     {
@@ -45,7 +45,7 @@ namespace Walacor_SDK.Helpers
         {
             return string.IsNullOrEmpty(path)
                 ? "/"
-                : (path.EndsWith("/", StringComparison.Ordinal) ? path : path + "/");
+                : path.EndsWith("/", StringComparison.Ordinal) ? path : path + "/";
         }
 
         public static string CombinePaths(string left, string right)

@@ -12,16 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Walacor_SDK.Enums;
+using Newtonsoft.Json;
 
-namespace Walacor_SDK.Models.Schema.Request
+namespace Walacor_SDK.Models.Schema.Response
 {
-    public class CreateSchemaRequest
+    public sealed class IndexKeyDto
     {
-        public SystemEnvelopeType ETId { get; set; } = SystemEnvelopeType.Schema;
-
-        public int SV { get; set; } = 1;
-
-        public CreateSchemaDefinition Schema { get; set; } = default!;
+        [JsonProperty("_id")]
+        public int Id { get; set; }
     }
 }

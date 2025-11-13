@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Globalization;
 using Walacor_SDK.Enums;
 
-namespace Walacor_SDK.Models.Schema.Request
+namespace Walacor_SDK.W_Client.Helpers
 {
-    public class CreateSchemaRequest
+    internal static class EnumHelper
     {
-        public SystemEnvelopeType ETId { get; set; } = SystemEnvelopeType.Schema;
-
-        public int SV { get; set; } = 1;
-
-        public CreateSchemaDefinition Schema { get; set; } = default!;
+        public static string EtIdToString(SystemEnvelopeType etId) =>
+        ((int)etId).ToString(CultureInfo.InvariantCulture);
     }
 }

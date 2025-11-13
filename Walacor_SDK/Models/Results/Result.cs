@@ -19,13 +19,20 @@ namespace Walacor_SDK.Models.Results
 {
     public sealed class Result<T>
     {
-        private Result(bool ok, T? val, Error? err, int? status, string? corrId)
+        private Result(
+            bool ok,
+            T? val,
+            Error? err,
+            int? status,
+            string? corrId,
+            long? durationMs)
         {
             this.IsSuccess = ok;
             this.Value = val;
             this.Error = err;
             this.StatusCode = status;
             this.CorrelationId = corrId;
+            this.DurationMs = durationMs;
         }
 
         public bool IsSuccess { get; }
@@ -38,11 +45,24 @@ namespace Walacor_SDK.Models.Results
 
         public string? CorrelationId { get; }
 
-        public static Result<T> Success(T value, int? statusCode = 200, string? correlationId = null)
-            => new(true, value, null, statusCode, correlationId);
+        /// <summary>
+        /// Duration of the HTTP request in milliseconds, measured by CorrelationLoggingHandler.
+        /// </summary>
+        public long? DurationMs { get; }
 
-        public static Result<T> Fail(Error error, int? statusCode = null, string? correlationId = null)
-            => new(false, default, error, statusCode, correlationId);
+        public static Result<T> Success(
+            T value,
+            int? statusCode = 200,
+            string? correlationId = null,
+            long? durationMs = null)
+            => new(true, value, null, statusCode, correlationId, durationMs);
+
+        public static Result<T> Fail(
+            Error error,
+            int? statusCode = null,
+            string? correlationId = null,
+            long? durationMs = null)
+            => new(false, default, error, statusCode, correlationId, durationMs);
 
         public void Deconstruct(out bool ok, out T? val, out Error? err)
         {
@@ -56,12 +76,12 @@ namespace Walacor_SDK.Models.Results
 
         public Result<TResult> Map<TResult>(Func<T, TResult> map)
             => this.IsSuccess
-                ? Result<TResult>.Success(map(this.Value!), this.StatusCode, this.CorrelationId)
-                : Result<TResult>.Fail(this.Error!, this.StatusCode, this.CorrelationId);
+                ? Result<TResult>.Success(map(this.Value!), this.StatusCode, this.CorrelationId, this.DurationMs)
+                : Result<TResult>.Fail(this.Error!, this.StatusCode, this.CorrelationId, this.DurationMs);
 
         public Result<T> Ensure(Func<T, bool> predicate, string errorCode, string message)
             => this.IsSuccess && !predicate(this.Value!)
-                ? Fail(Error.Validation(errorCode, message), this.StatusCode, this.CorrelationId)
+                ? Fail(Error.Validation(errorCode, message), this.StatusCode, this.CorrelationId, this.DurationMs)
                 : this;
     }
 }

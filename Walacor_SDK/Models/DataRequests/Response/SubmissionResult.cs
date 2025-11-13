@@ -16,9 +16,16 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Walacor_SDK.Models.Schema.Request
+namespace Walacor_SDK.Models.DataRequests.Response
 {
-    public class SystemEnvelopeType
+    public sealed class SubmissionResult
     {
+        public string EId { get; set; } = string.Empty;
+
+        public int ETId { get; set; }
+
+        public int ES { get; set; }
+
+        public IList<string> UID { get; set; } = new List<string>();
     }
 }

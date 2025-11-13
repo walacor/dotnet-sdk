@@ -13,23 +13,82 @@
 // limitations under the License.
 
 using Walacor_SDK;
+using Walacor_SDK.Enums;
+using Walacor_SDK.Models.Schema.Request;
 
 class Program
 {
     public static async Task Main(string[] args)
     {
         Console.WriteLine("Hello Walacor!");
-        var svc = new WalacorService("44.203.135.89", "Admin", "GreenDoor99");
+        var svc = new WalacorService("54.234.235.56", "Admin", "W@lacor1927");
 
-        var dataTypes = await svc.SchemaService.GetDataTypesAsync();
-        var pagf = await svc.SchemaService.GetPlatformAutoGenerationFieldsAsync();
-        var llv = await svc.SchemaService.GetListWithLatestVersionAsync();
-        var versions = await svc.SchemaService.GetVersionsAsync();
+        //var dataTypes = await svc.SchemaService.GetDataTypesAsync();
+        //var pagf = await svc.SchemaService.GetPlatformAutoGenerationFieldsAsync();
+        //var llv = await svc.SchemaService.GetListWithLatestVersionAsync();
+        //var versions = await svc.SchemaService.GetVersionsAsync();
+        //var versions_etid = await svc.SchemaService.GetVersionsForEnvelopeTypeAsync(10000);
+        //var indexes = await svc.SchemaService.GetIndexesAsync(15);
+        //var indexesEnum = await svc.SchemaService.GetIndexesAsync(SystemEnvelopeType.OrgId);
+        //var indexesByName = await svc.SchemaService.GetIndexesByTableNameAsync("roles");
+        //var schema = await svc.SchemaService.CreateSchemaAsync(BuildSchemaMode());
+        //var details = await svc.SchemaService.GetDetailsByIdAsync("4459");
+        //var schmeDetails = await svc.SchemaService.GetSchemaDetailsByEnvelopeTypeAsync(10);
+        //var envTypes = await svc.SchemaService.GetEnvelopeTypesAsync();
+        //var lsi = await svc.SchemaService.GetListSchemaItemsAsync();
+        var sqsi = await svc.SchemaService.GetSchemaQuerySchemaItemsAsync(new SchemaQueryListRequest());
 
 
-        Console.WriteLine(dataTypes.Value);
-        Console.WriteLine(pagf.Value);
-        Console.WriteLine(llv.Value);
-        Console.WriteLine(versions.Value);
+        //Console.WriteLine(dataTypes.Value);
+        //Console.WriteLine(pagf.Value);
+        //Console.WriteLine(llv.Value);
+        //Console.WriteLine(versions.Value);
+        //Console.WriteLine(versions_etid.Value);
+        //Console.WriteLine(indexes.Value);
+        //Console.WriteLine(indexesEnum.Value);
+        //Console.WriteLine(indexesByName.Value);
+        //Console.WriteLine(schema.Value);
+        //Console.WriteLine(details.Value);
+        //Console.WriteLine(schmeDetails.Value);
+        //Console.WriteLine(envTypes.Value);
+    }
+
+    public static CreateSchemaRequest BuildSchemaMode()
+    {
+        return new CreateSchemaRequest()
+        {
+            Schema = new CreateSchemaDefinition()
+            {
+                ETId = 11223344,
+                TableName = "dotnet",
+                Family = "sdk",
+                DoSummary = true,
+                Fields = new List<CreateFieldRequest>()
+                {
+                    new CreateFieldRequest(){
+                        DataType = FieldType.Text,
+                        FieldName = "version",
+                        MaxLength = 5,
+                        Required= true
+                    },
+                    new CreateFieldRequest(){
+                        DataType= FieldType.Boolean,
+                        FieldName= "deployed",
+                        Default = true,
+                        Required = true
+                    },
+                },
+                Indexes = new List<CreateIndexRequest>()
+                {
+                    new CreateIndexRequest(){
+                        Fields = ["version"],
+                        IndexValue = "versions",
+                        ForceUpdate = false,
+                        Delete = false,
+                    },
+
+                },
+            }
+        };
     }
 }

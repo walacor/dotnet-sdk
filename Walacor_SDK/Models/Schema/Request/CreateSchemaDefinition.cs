@@ -12,16 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Walacor_SDK.Enums;
+using System.Collections.Generic;
 
 namespace Walacor_SDK.Models.Schema.Request
 {
-    public class CreateSchemaRequest
+    public sealed class CreateSchemaDefinition
     {
-        public SystemEnvelopeType ETId { get; set; } = SystemEnvelopeType.Schema;
+        public int ETId { get; set; }
 
-        public int SV { get; set; } = 1;
+        public string TableName { get; set; } = string.Empty;
 
-        public CreateSchemaDefinition Schema { get; set; } = default!;
+        public string Family { get; set; } = string.Empty;
+
+        public bool DoSummary { get; set; } = false;
+
+        public IList<CreateFieldRequest> Fields { get; set; } = new List<CreateFieldRequest>();
+
+        public IList<CreateIndexRequest> Indexes { get; set; } = new List<CreateIndexRequest>();
     }
 }

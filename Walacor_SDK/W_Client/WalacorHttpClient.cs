@@ -84,12 +84,12 @@ namespace Walacor_SDK.Client
 
                 using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
 
-                var corrId = TryGetCorrelationId(res);
+                var (corrId, duration) = TryGetCorrelationInfo(res);
                 var status = (int)res.StatusCode;
 
                 if (status == 204)
                 {
-                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId);
+                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId, duration);
                 }
 
                 var mediaType = res.Content.Headers.ContentType?.MediaType;
@@ -99,23 +99,24 @@ namespace Walacor_SDK.Client
                 {
                     if (string.IsNullOrWhiteSpace(body))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId);
+                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId, duration);
                     }
 
                     if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
+                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId, duration);
                     }
 
                     return ResponseMapper.FromSuccessEnvelope<TResponse>(
                         body,
                         s => this._json.Deserialize<BaseResponse<TResponse>>(s),
                         status,
-                        corrId);
+                        corrId,
+                        duration);
                 }
 
                 var err = HttpErrorMapper.FromStatus(status, body);
-                return Result<TResponse>.Fail(err, status, corrId);
+                return Result<TResponse>.Fail(err, status, corrId, duration);
             }
             catch (Exception ex)
             {
@@ -137,12 +138,12 @@ namespace Walacor_SDK.Client
 
                 using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
 
-                var corrId = TryGetCorrelationId(res);
+                var (corrId, duration) = TryGetCorrelationInfo(res);
                 var status = (int)res.StatusCode;
 
                 if (status == 204)
                 {
-                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId);
+                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId, duration);
                 }
 
                 var mediaType = res.Content.Headers.ContentType?.MediaType;
@@ -152,23 +153,24 @@ namespace Walacor_SDK.Client
                 {
                     if (string.IsNullOrWhiteSpace(bodyText))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId);
+                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId, duration);
                     }
 
                     if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
+                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId, duration);
                     }
 
                     return ResponseMapper.FromSuccessEnvelope<TResponse>(
                         bodyText,
                         s => this._json.Deserialize<BaseResponse<TResponse>>(s),
                         status,
-                        corrId);
+                        corrId,
+                        duration);
                 }
 
                 var err = HttpErrorMapper.FromStatus(status, bodyText);
-                return Result<TResponse>.Fail(err, status, corrId);
+                return Result<TResponse>.Fail(err, status, corrId, duration);
             }
             catch (Exception ex)
             {
@@ -190,12 +192,12 @@ namespace Walacor_SDK.Client
 
                 using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
 
-                var corrId = TryGetCorrelationId(res);
+                var (corrId, duration) = TryGetCorrelationInfo(res);
                 var status = (int)res.StatusCode;
 
                 if (status == 204)
                 {
-                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId);
+                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId, duration);
                 }
 
                 var mediaType = res.Content.Headers.ContentType?.MediaType;
@@ -205,23 +207,24 @@ namespace Walacor_SDK.Client
                 {
                     if (string.IsNullOrWhiteSpace(bodyText))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId);
+                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId, duration);
                     }
 
                     if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
+                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId, duration);
                     }
 
                     return ResponseMapper.FromSuccessEnvelope<TResponse>(
                         bodyText,
                         s => this._json.Deserialize<BaseResponse<TResponse>>(s),
                         status,
-                        corrId);
+                        corrId,
+                        duration);
                 }
 
                 var err = HttpErrorMapper.FromStatus(status, bodyText);
-                return Result<TResponse>.Fail(err, status, corrId);
+                return Result<TResponse>.Fail(err, status, corrId, duration);
             }
             catch (Exception ex)
             {
@@ -241,17 +244,17 @@ namespace Walacor_SDK.Client
 
                 using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
 
-                var corrId = TryGetCorrelationId(res);
+                var (corrId, duration) = TryGetCorrelationInfo(res);
                 var status = (int)res.StatusCode;
 
                 if (res.IsSuccessStatusCode || status == 204)
                 {
-                    return Result<bool>.Success(true, status, corrId);
+                    return Result<bool>.Success(true, status, corrId, duration);
                 }
 
                 var bodyText = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 var err = HttpErrorMapper.FromStatus(status, bodyText);
-                return Result<bool>.Fail(err, status, corrId);
+                return Result<bool>.Fail(err, status, corrId, duration);
             }
             catch (Exception ex)
             {
@@ -274,12 +277,12 @@ namespace Walacor_SDK.Client
 
                 using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
 
-                var corrId = TryGetCorrelationId(res);
+                var (corrId, duration) = TryGetCorrelationInfo(res);
                 var status = (int)res.StatusCode;
 
                 if (status == 204)
                 {
-                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId);
+                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId, duration);
                 }
 
                 var mediaType = res.Content.Headers.ContentType?.MediaType;
@@ -289,23 +292,24 @@ namespace Walacor_SDK.Client
                 {
                     if (string.IsNullOrWhiteSpace(bodyText))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId);
+                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId, duration);
                     }
 
                     if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
+                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId, duration);
                     }
 
                     return ResponseMapper.FromSuccessEnvelope<TResponse>(
                         bodyText,
                         s => this._json.Deserialize<BaseResponse<TResponse>>(s),
                         status,
-                        corrId);
+                        corrId,
+                        duration);
                 }
 
                 var err = HttpErrorMapper.FromStatus(status, bodyText);
-                return Result<TResponse>.Fail(err, status, corrId);
+                return Result<TResponse>.Fail(err, status, corrId, duration);
             }
             catch (Exception ex)
             {
@@ -330,12 +334,12 @@ namespace Walacor_SDK.Client
 
                 using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
 
-                var corrId = TryGetCorrelationId(res);
+                var (corrId, duration) = TryGetCorrelationInfo(res);
                 var status = (int)res.StatusCode;
 
                 if (status == 204)
                 {
-                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId);
+                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId, duration);
                 }
 
                 var mediaType = res.Content.Headers.ContentType?.MediaType;
@@ -345,23 +349,24 @@ namespace Walacor_SDK.Client
                 {
                     if (string.IsNullOrWhiteSpace(bodyText))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId);
+                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId, duration);
                     }
 
                     if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
+                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId, duration);
                     }
 
                     return ResponseMapper.FromSuccessEnvelope<TResponse>(
                         bodyText,
                         s => this._json.Deserialize<BaseResponse<TResponse>>(s),
                         status,
-                        corrId);
+                        corrId,
+                        duration);
                 }
 
                 var err = HttpErrorMapper.FromStatus(status, bodyText);
-                return Result<TResponse>.Fail(err, status, corrId);
+                return Result<TResponse>.Fail(err, status, corrId, duration);
             }
             catch (Exception ex)
             {
@@ -386,12 +391,12 @@ namespace Walacor_SDK.Client
 
                 using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
 
-                var corrId = TryGetCorrelationId(res);
+                var (corrId, duration) = TryGetCorrelationInfo(res);
                 var status = (int)res.StatusCode;
 
                 if (status == 204)
                 {
-                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId);
+                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId, duration);
                 }
 
                 var mediaType = res.Content.Headers.ContentType?.MediaType;
@@ -401,23 +406,24 @@ namespace Walacor_SDK.Client
                 {
                     if (string.IsNullOrWhiteSpace(bodyText))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId);
+                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId, duration);
                     }
 
                     if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId);
+                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId, duration);
                     }
 
                     return ResponseMapper.FromSuccessEnvelope<TResponse>(
                         bodyText,
                         s => this._json.Deserialize<BaseResponse<TResponse>>(s),
                         status,
-                        corrId);
+                        corrId,
+                        duration);
                 }
 
                 var err = HttpErrorMapper.FromStatus(status, bodyText);
-                return Result<TResponse>.Fail(err, status, corrId);
+                return Result<TResponse>.Fail(err, status, corrId, duration);
             }
             catch (TaskCanceledException)
             {
@@ -448,17 +454,17 @@ namespace Walacor_SDK.Client
 
                 using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
 
-                var corrId = TryGetCorrelationId(res);
+                var (corrId, duration) = TryGetCorrelationInfo(res);
                 var status = (int)res.StatusCode;
 
                 if (res.IsSuccessStatusCode || status == 204)
                 {
-                    return Result<bool>.Success(true, status, corrId);
+                    return Result<bool>.Success(true, status, corrId, duration);
                 }
 
                 var bodyText = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 var err = HttpErrorMapper.FromStatus(status, bodyText);
-                return Result<bool>.Fail(err, status, corrId);
+                return Result<bool>.Fail(err, status, corrId, duration);
             }
             catch (Exception ex)
             {
@@ -515,14 +521,25 @@ namespace Walacor_SDK.Client
             return sb.ToString();
         }
 
-        private static string? TryGetCorrelationId(HttpResponseMessage res)
+        private static (string? CorrelationId, long? DurationMs) TryGetCorrelationInfo(HttpResponseMessage res)
         {
+            string? corrId = null;
+            long? duration = null;
+
             if (res.Headers.TryGetValues("X-Request-ID", out var vals))
             {
-                return vals.FirstOrDefault();
+                corrId = vals.FirstOrDefault();
             }
 
-            return null;
+            if (res.RequestMessage?.Properties.TryGetValue("Walacor.Duration", out var durObj) == true)
+            {
+                if (durObj is long d)
+                {
+                    duration = d;
+                }
+            }
+
+            return (corrId, duration);
         }
 
 #pragma warning disable SA1202

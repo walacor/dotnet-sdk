@@ -13,12 +13,24 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
+using Walacor_SDK.Enums;
 
 namespace Walacor_SDK.Models.Schema.Request
 {
-    public class SchemaQueryListRequest
+    public sealed class SchemaQueryListRequest
     {
+        public int? Page { get; set; } = 1;
+
+        public int? PageSize { get; set; } = 10;
+
+        public SortOrder? Order { get; set; } = SortOrder.Desc;
+
+        public string? OrderBy { get; set; } = "Family";
+
+        public DateTimeOffset? StartDate { get; set; }
+
+        public DateTimeOffset? EndDate { get; set; }
+
+        public string? Search { get; set; }
     }
 }

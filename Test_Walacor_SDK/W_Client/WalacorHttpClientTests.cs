@@ -37,7 +37,7 @@ namespace Test_Walacor_SDK.W_Client
 
             var http = new HttpClient(fake) { BaseAddress = new Uri("https://example.test/") };
             var json = new NewtonsoftJsonSerializer();
-            var opts = new WalacorHttpClientOptions { ThrowOnValidation422 = true }; // kept for completeness
+            var opts = new WalacorHttpClientOptions { ThrowOnValidation422 = true };
 
             var client = new WalacorHttpClient(http, json, opts);
 

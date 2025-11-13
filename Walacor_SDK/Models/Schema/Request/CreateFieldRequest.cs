@@ -12,16 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Walacor_SDK.Enums;
 
 namespace Walacor_SDK.Models.Schema.Request
 {
-    public class CreateSchemaRequest
+    public sealed class CreateFieldRequest
     {
-        public SystemEnvelopeType ETId { get; set; } = SystemEnvelopeType.Schema;
+        public string FieldName { get; set; } = string.Empty;
 
-        public int SV { get; set; } = 1;
+        [JsonConverter(typeof(StringEnumConverter))]
+        public FieldType DataType { get; set; }
 
-        public CreateSchemaDefinition Schema { get; set; } = default!;
+        public bool Required { get; set; } = false;
+
+        public int? MaxLength { get; set; }
+
+        public bool? Default { get; set; }
     }
 }

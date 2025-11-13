@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Walacor_SDK.Enums;
-
-namespace Walacor_SDK.Models.Schema.Request
+namespace Walacor_SDK.Enums
 {
-    public class CreateSchemaRequest
+    public enum SortOrder
     {
-        public SystemEnvelopeType ETId { get; set; } = SystemEnvelopeType.Schema;
+        /// <summary>
+        /// Ascending order (A→Z, 0→9, oldest→newest).
+        /// </summary>
+        Asc = 0,
 
-        public int SV { get; set; } = 1;
-
-        public CreateSchemaDefinition Schema { get; set; } = default!;
+        /// <summary>
+        /// Descending order (Z→A, 9→0, newest→oldest).
+        /// </summary>
+        Desc = 1,
     }
 }

@@ -12,13 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Walacor_SDK.Models.Schema.Response
 {
-    public class SchemaMetadataDto
+    public sealed class SchemaMetadataDto
     {
+        public string EId { get; set; } = string.Empty;
+
+        public int ETId { get; set; }
+
+        public int SV { get; set; }
+
+        public int ES { get; set; }
+
+        public long CreatedAt { get; set; }
+
+        public long UpdatedAt { get; set; }
+
+        public IList<string> UID { get; set; } = new List<string>();
     }
 }

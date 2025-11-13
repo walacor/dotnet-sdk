@@ -20,7 +20,7 @@ namespace Walacor_SDK.W_Client.Options
     {
         public int MaxRetries { get; set; } = 2;
 
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(100);
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(10);
 
         public bool ThrowOnValidation422 { get; set; } = true;
     }

@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Walacor_SDK.Enums;
 using Walacor_SDK.Models.Results;
 using Walacor_SDK.Models.Schema.Request;
 using Walacor_SDK.Models.Schema.Response;
@@ -31,24 +32,24 @@ namespace Walacor_SDK.Services.Abs
 
         Task<Result<IReadOnlyList<SchemaVersionEntryDto>>> GetVersionsAsync(CancellationToken ct = default);
 
-        // Task<Result<IReadOnlyList<int>>> GetVersionsForEnvelopeTypeAsync(int etId, CancellationToken ct = default);
+        Task<Result<IReadOnlyList<int>>> GetVersionsForEnvelopeTypeAsync(int etId, CancellationToken ct = default);
 
-        // Task<Result<IReadOnlyList<IndexEntryDto>>> GetIndexesAsync(int etId, CancellationToken ct = default);
+        Task<Result<IReadOnlyList<IndexEntryDto>>> GetIndexesAsync(int etId, CancellationToken ct = default);
 
-        // Task<Result<IReadOnlyList<IndexEntryDto>>> GetIndexesAsync(SystemEnvelopeType etId, CancellationToken ct = default);
+        Task<Result<IReadOnlyList<IndexEntryDto>>> GetIndexesAsync(SystemEnvelopeType etId, CancellationToken ct = default);
 
-        // Task<Result<IReadOnlyList<IndexEntryDto>>> GetIndexesByTableNameAsync(string tableName, CancellationToken ct = default);
+        Task<Result<IReadOnlyList<IndexEntryDto>>> GetIndexesByTableNameAsync(string tableName, CancellationToken ct = default);
 
-        // Task<Result<SchemaMetadataDto>> CreateSchemaAsync(CreateSchemaRequest request, int etId, int schemaVersion, CancellationToken ct = default);
+        Task<Result<SchemaMetadataDto>> CreateSchemaAsync(CreateSchemaRequest request, CancellationToken ct = default);
 
-        // Task<Result<SchemaDetailDto>> GetSchemaDetailsByEnvelopeTypeAsync(int etId, CancellationToken ct = default);
+        Task<Result<SchemaDetailDto>> GetSchemaDetailsByEnvelopeTypeAsync(int etId, CancellationToken ct = default);
 
-        // Task<Result<IReadOnlyList<int>>> GetEnvelopeTypesAsync(CancellationToken ct = default);
+        Task<Result<IReadOnlyList<long>>> GetEnvelopeTypesAsync(CancellationToken ct = default);
 
-        // Task<Result<SchemaDetailDto>> GetDetailsByIdAsync(string id, CancellationToken ct = default);
+        Task<Result<SchemaDetailDto>> GetDetailsByIdAsync(string id, CancellationToken ct = default);
 
-        // Task<Result<IReadOnlyList<SchemaItemDto>>> GetListSchemaItemsAsync(CancellationToken ct = default);
+        Task<Result<IReadOnlyList<SchemaItemDto>>> GetListSchemaItemsAsync(CancellationToken ct = default);
 
-        // Task<Result<Paged<SchemaItemDto>>> GetSchemaQuerySchemaItemsAsync(SchemaQueryListRequest request, CancellationToken ct = default);
+        Task<Result<Paged<SchemaSummaryDto>>> GetSchemaQuerySchemaItemsAsync(SchemaQueryListRequest request, CancellationToken ct = default);
     }
 }

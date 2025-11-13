@@ -363,3 +363,6 @@ MigrationBackup/
 FodyWeavers.xsd
 
 artifacts/
+
+Tester.cs
+**/Program.cs

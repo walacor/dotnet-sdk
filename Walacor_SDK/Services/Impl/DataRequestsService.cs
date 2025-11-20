@@ -244,14 +244,23 @@ namespace Walacor_SDK.Services.Impl
             };
 
             var res = await this._ctx.Transport
-                .PostJsonWithHeadersAsync<IEnumerable<IDictionary<string, object>>, ComplexQMLQueryRecords>(
+                .PostJsonWithHeadersAsync<IEnumerable<IDictionary<string, object>>, List<Dictionary<string, object>>>(
                     path,
                     pipeline,
                     headers: headers,
                     ct: ct)
                 .ConfigureAwait(false);
 
-            return res;
+            return res.Map(rows =>
+            {
+                var safeRows = rows ?? new List<Dictionary<string, object>>();
+
+                return new ComplexQMLQueryRecords
+                {
+                    Records = safeRows,
+                    Total = safeRows.Count,
+                };
+            });
         }
     }
 }

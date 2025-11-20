@@ -24,7 +24,7 @@ using Walacor_SDK.W_Client.Options;
 
 namespace Walacor_SDK
 {
-    public class WalacorService
+    public class WalacorService : IDisposable
     {
         private readonly ClientContext _context;
         private readonly ServiceFactory _factory;
@@ -66,6 +66,8 @@ namespace Walacor_SDK
         }
 
         public ISchemaService SchemaService => this._factory.Get(ctx => new SchemaService(ctx, "schemas"));
+
+        public IDataRequestsService DataRequestsService => this._factory.Get(ctx => new DataRequestsService(ctx, "envelopes"));
 
         public void Dispose()
         {

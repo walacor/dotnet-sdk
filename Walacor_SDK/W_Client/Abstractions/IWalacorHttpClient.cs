@@ -74,6 +74,11 @@ namespace Walacor_SDK.W_Client.Abstractions
             IDictionary<string, string>? headers = null,
             CancellationToken ct = default);
 
+        Task<Result<TResponse>> PostMultipartAsync<TResponse>(
+            string path,
+            HttpContent content,
+            CancellationToken ct = default);
+
         // Files TODO
         // Task UploadAsync(string path, Stream fileStream, string formFieldName = "file", IDictionary<string, string>? additionalFields = null, CancellationToken ct = default);
         // Task DownloadStreamAsync(string path, Stream destination, CancellationToken ct = default);

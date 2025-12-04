@@ -69,6 +69,8 @@ namespace Walacor_SDK
 
         public IDataRequestsService DataRequestsService => this._factory.Get(ctx => new DataRequestsService(ctx, "envelopes"));
 
+        public IFileRequestsService FileRequestsService => this._factory.Get(ctx => new FileRequestsService(ctx, "v2/files"));
+
         public void Dispose()
         {
             if (this._disposed)

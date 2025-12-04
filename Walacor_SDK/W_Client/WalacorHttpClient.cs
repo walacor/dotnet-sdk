@@ -472,6 +472,72 @@ namespace Walacor_SDK.Client
             }
         }
 
+#pragma warning disable MA0051 // Method is too long
+        public async Task<Result<TResponse>> PostMultipartAsync<TResponse>(string path, HttpContent content, CancellationToken ct = default)
+#pragma warning restore MA0051 // Method is too long
+        {
+            try
+            {
+                var uri = AppendQuery(path, query: null);
+                using var req = new HttpRequestMessage(HttpMethod.Post, uri);
+
+                req.Headers.Accept.ParseAdd("application/json");
+                req.Content = content;
+
+                using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
+
+                var (corrId, duration) = TryGetCorrelationInfo(res);
+                var status = (int)res.StatusCode;
+
+                if (status == 204)
+                {
+                    return Result<TResponse>.Fail(
+                        Error.NotFound("No content."),
+                        status,
+                        corrId,
+                        duration);
+                }
+
+                var mediaType = res.Content.Headers.ContentType?.MediaType;
+                var bodyText = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                if (res.IsSuccessStatusCode)
+                {
+                    if (string.IsNullOrWhiteSpace(bodyText))
+                    {
+                        return Result<TResponse>.Fail(
+                            Error.Deserialization("Empty response body."),
+                            status,
+                            corrId,
+                            duration);
+                    }
+
+                    if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Result<TResponse>.Fail(
+                            Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"),
+                            status,
+                            corrId,
+                            duration);
+                    }
+
+                    return ResponseMapper.FromSuccessEnvelope<TResponse>(
+                        bodyText,
+                        s => this._json.Deserialize<BaseResponse<TResponse>>(s),
+                        status,
+                        corrId,
+                        duration);
+                }
+
+                var err = HttpErrorMapper.FromStatus(status, bodyText);
+                return Result<TResponse>.Fail(err, status, corrId, duration);
+            }
+            catch (Exception ex)
+            {
+                return ExceptionResult.From<TResponse>(ex);
+            }
+        }
+
         private static void ApplyHeaders(HttpRequestMessage req, IDictionary<string, string>? headers)
         {
             if (headers == null || headers.Count == 0)

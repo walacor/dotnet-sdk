@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -535,6 +536,46 @@ namespace Walacor_SDK.Client
             catch (Exception ex)
             {
                 return ExceptionResult.From<TResponse>(ex);
+            }
+        }
+
+        public async Task<Result<Stream>> PostJsonForStreamAsync(
+            string path,
+            object body,
+            CancellationToken ct = default)
+        {
+            try
+            {
+                var uri = AppendQuery(path, query: null);
+                using var req = new HttpRequestMessage(HttpMethod.Post, uri);
+
+                req.Headers.Accept.ParseAdd("*/*");
+                req.Content = new StringContent(this._json.Serialize(body), Encoding.UTF8, "application/json");
+
+                var res = await this._http
+                    .SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct)
+                    .ConfigureAwait(false);
+
+                var (corrId, duration) = TryGetCorrelationInfo(res);
+                var status = (int)res.StatusCode;
+
+                if (!res.IsSuccessStatusCode)
+                {
+                    using (res)
+                    {
+                        var errorBody = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        var err = HttpErrorMapper.FromStatus(status, errorBody);
+                        return Result<Stream>.Fail(err, status, corrId, duration);
+                    }
+                }
+
+                var stream = await res.Content.ReadAsStreamAsync().ConfigureAwait(false);
+
+                return Result<Stream>.Success(stream, status, corrId, duration);
+            }
+            catch (Exception ex)
+            {
+                return ExceptionResult.From<Stream>(ex);
             }
         }
 

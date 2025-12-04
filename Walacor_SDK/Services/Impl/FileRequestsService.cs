@@ -13,7 +13,10 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
@@ -119,6 +122,133 @@ namespace Walacor_SDK.Services.Impl
                 .ConfigureAwait(false);
 
             return res;
+        }
+
+#pragma warning disable MA0051 // Method is too long
+        public async Task<Result<string>> DownloadAsync(string uid, string? saveTo = null, CancellationToken ct = default)
+        {
+#pragma warning restore MA0051 // Method is too long
+            if (string.IsNullOrWhiteSpace(uid))
+            {
+                throw new ArgumentNullException(nameof(uid));
+            }
+
+            var path = $"{this._segment}/download";
+            var body = new { UID = uid };
+
+            var wireResult = await this._ctx.Transport
+                .PostJsonForStreamAsync(path, body, ct)
+                .ConfigureAwait(false);
+
+            if (!wireResult.IsSuccess || wireResult.Value is null)
+            {
+                return Result<string>.Fail(
+                    wireResult.Error ?? Error.Unknown("Download failed."),
+                    wireResult.StatusCode,
+                    wireResult.CorrelationId,
+                    wireResult.DurationMs);
+            }
+
+            var stream = wireResult.Value;
+
+            var targetPathResult = DownloadHelper.ResolveDownloadTargetPath(uid, saveTo);
+            if (!targetPathResult.IsSuccess || string.IsNullOrWhiteSpace(targetPathResult.Value))
+            {
+                stream.Dispose();
+
+                return Result<string>.Fail(
+                    targetPathResult.Error ?? Error.Validation("invalid_path", "The target download path is invalid."),
+                    wireResult.StatusCode,
+                    wireResult.CorrelationId,
+                    wireResult.DurationMs);
+            }
+
+            var filePath = targetPathResult.Value!;
+
+            try
+            {
+                var dir = Path.GetDirectoryName(filePath);
+                if (!string.IsNullOrEmpty(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                using (stream)
+                using (var fs = new FileStream(
+                    filePath,
+                    FileMode.Create,
+                    FileAccess.Write,
+                    FileShare.None))
+                {
+                    await stream.CopyToAsync(fs, 81920, ct).ConfigureAwait(false);
+                }
+
+                return Result<string>.Success(
+                    filePath,
+                    wireResult.StatusCode,
+                    wireResult.CorrelationId,
+                    wireResult.DurationMs);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                stream.Dispose();
+
+                return Result<string>.Fail(
+                    Error.Unknown("Failed to write file to disk."),
+                    wireResult.StatusCode,
+                    wireResult.CorrelationId,
+                    wireResult.DurationMs);
+            }
+        }
+
+        public async Task<Result<IReadOnlyList<FileMetadata>>> ListFilesAsync(string? uid = null, int pageSize = 0, int pageNo = 0, bool fromSummary = false, bool totalReq = true, CancellationToken ct = default)
+        {
+            var path = "query/get";
+
+            var query = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["fromSummary"] = fromSummary.ToString().ToLowerInvariant(),
+                ["totalReq"] = totalReq.ToString().ToLowerInvariant(),
+                ["pageSize"] = pageSize.ToString(CultureInfo.InvariantCulture),
+                ["pageNo"] = pageNo.ToString(CultureInfo.InvariantCulture),
+            };
+
+            object payload = string.IsNullOrWhiteSpace(uid)
+                ? new { }
+                : new { UID = uid };
+
+            var headers = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["ETId"] = "17",
+            };
+
+            var wireResult = await this._ctx.Transport
+                .PostJsonWithHeadersAsync<object, List<FileMetadata>>(
+                    path,
+                    payload,
+                    query,
+                    headers,
+                    ct)
+                .ConfigureAwait(false);
+
+            if (!wireResult.IsSuccess || wireResult.Value is null)
+            {
+                return Result<IReadOnlyList<FileMetadata>>.Fail(
+                    wireResult.Error ?? Error.Unknown("List files failed."),
+                    wireResult.StatusCode,
+                    wireResult.CorrelationId,
+                    wireResult.DurationMs);
+            }
+
+            var list = wireResult.Value;
+
+            var ro = list.ToList().AsReadOnly();
+
+            return Result<IReadOnlyList<FileMetadata>>.Success(
+                ro,
+                wireResult.StatusCode,
+                wireResult.CorrelationId,
+                wireResult.DurationMs);
         }
     }
 }

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -79,8 +80,9 @@ namespace Walacor_SDK.W_Client.Abstractions
             HttpContent content,
             CancellationToken ct = default);
 
-        // Files TODO
-        // Task UploadAsync(string path, Stream fileStream, string formFieldName = "file", IDictionary<string, string>? additionalFields = null, CancellationToken ct = default);
-        // Task DownloadStreamAsync(string path, Stream destination, CancellationToken ct = default);
+        Task<Result<Stream>> PostJsonForStreamAsync(
+           string path,
+           object body,
+           CancellationToken ct = default);
     }
 }

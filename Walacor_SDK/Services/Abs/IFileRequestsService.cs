@@ -27,8 +27,8 @@ namespace Walacor_SDK.Services.Abs
 
         Task<Result<StoreFileData>> StoreAsync(FileInfo fileInfo, CancellationToken ct = default);
 
-        // Task<Result<string>> DownloadAsync(string uid, string? saveTo = null, CancellationToken ct = default);
+        Task<Result<string>> DownloadAsync(string uid, string? saveTo = null, CancellationToken ct = default);
 
-        // Task<Result<IReadOnlyList<FileMetadata>>> ListFilesAsync(string? uid = null, int pageSize = 0, int pageNo = 0, bool fromSummary = false, bool requestTotal = true, CancellationToken ct = default);
+        Task<Result<IReadOnlyList<FileMetadata>>> ListFilesAsync(string? uid = null, int pageSize = 0, int pageNo = 0, bool fromSummary = false, bool requestTotal = true, CancellationToken ct = default);
     }
 }

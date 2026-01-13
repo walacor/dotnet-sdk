@@ -13,7 +13,7 @@
 // limitations under the License.
 
 using Newtonsoft.Json.Linq;
-using Walacor_SDK.Models.FileRequests.Request;
+using Walacor_SDK.Models.FileRequests.Response; // <-- DuplicateData
 using Walacor_SDK.Models.Result;
 
 namespace Walacor_SDK.W_Client.Mappers
@@ -28,12 +28,6 @@ namespace Walacor_SDK.W_Client.Mappers
                 return parsed;
             }
 
-            var dup = TryMapDuplicateData(statusCode, body);
-            if (dup is not null)
-            {
-                return dup;
-            }
-
             return statusCode switch
             {
                 400 => Error.Validation("bad_request", "The request was invalid."),
@@ -42,43 +36,8 @@ namespace Walacor_SDK.W_Client.Mappers
                 408 => Error.Timeout(),
                 429 => Error.Server("Too many requests."),
                 >= 500 and < 600 => Error.Server($"Server error ({statusCode})."),
-                _ => Error.Unknown($"HTTP {statusCode}. {Trim(body)}"),
+                _ => Error.Unknown($"HTTP {statusCode}. {Trim(body ?? string.Empty)}"),
             };
-        }
-
-        private static Error? TryMapDuplicateData(int statusCode, string body, int? bodyCode, JObject obj)
-        {
-            var effective = bodyCode ?? statusCode;
-
-            if (effective != 422)
-            {
-                return null;
-            }
-
-            if (obj["duplicateData"] is not JObject dupObj)
-            {
-                return null;
-            }
-
-            var dup = dupObj.ToObject<DuplicateData>();
-            if (dup is null || dup.UID is null || dup.UID.Length == 0)
-            {
-                return null;
-            }
-
-            var err = Error.Validation("duplicate_file", "Duplicate file detected.");
-
-            // ONE structured object (your preference)
-            err.Details["duplicateData"] = dup;
-
-            // keep existing diagnostics pattern
-            err.Details["rawBody"] = Trim(body);
-            if (bodyCode.HasValue)
-            {
-                err.Details["code"] = bodyCode.Value;
-            }
-
-            return err;
         }
 
         private static Error? TryParseStructuredError(int statusCode, string body)
@@ -88,6 +47,7 @@ namespace Walacor_SDK.W_Client.Mappers
                 return null;
             }
 
+            // Some servers prepend non-json text; trim to first '{'
             var idx = body.IndexOf('{');
             if (idx > 0)
             {
@@ -105,18 +65,61 @@ namespace Walacor_SDK.W_Client.Mappers
                 var bodyCode = obj["code"]?.Value<int?>();
                 var errors = obj["errors"] as JArray;
 
+                // Shape 1: { "errors": [ { "reason": "...", "message": "..." } ], "code": ... }
                 var fromArray = TryMapErrorsArray(statusCode, body, bodyCode, errors);
                 if (fromArray is not null)
                 {
                     return fromArray;
                 }
 
+                // Shape 2 (verify duplicate): { "success": false, "duplicateData": { ... } }
+                var dup = TryMapDuplicateData(statusCode, body, bodyCode, obj);
+                if (dup is not null)
+                {
+                    return dup;
+                }
+
+                // Shape 3: { "error": "..." }
                 return TryMapSingleError(statusCode, body, bodyCode, obj);
             }
             catch
             {
                 return null;
             }
+        }
+
+        private static Error? TryMapDuplicateData(int statusCode, string body, int? bodyCode, JObject obj)
+        {
+            var effective = bodyCode ?? statusCode;
+            if (effective != 422)
+            {
+                return null;
+            }
+
+            if (obj["duplicateData"] is not JObject dupObj)
+            {
+                return null;
+            }
+
+            var dup = dupObj.ToObject<DuplicateData>();
+            if (dup is null || dup.UIDs is null || dup.UIDs.Count == 0)
+            {
+                return null;
+            }
+
+            var err = Error.Validation("duplicate_file", "Duplicate file detected.");
+
+            // One strong object, not many fields
+            err.Details["duplicateData"] = dup;
+
+            // diagnostics
+            err.Details["rawBody"] = Trim(body);
+            if (bodyCode.HasValue)
+            {
+                err.Details["code"] = bodyCode.Value;
+            }
+
+            return err;
         }
 
         private static Error? TryMapErrorsArray(int statusCode, string body, int? bodyCode, JArray? errors)
@@ -186,14 +189,14 @@ namespace Walacor_SDK.W_Client.Mappers
             };
         }
 
-        private static string Trim(string? s)
+        private static string Trim(string s)
         {
             if (string.IsNullOrWhiteSpace(s))
             {
                 return string.Empty;
             }
 
-            var value = s!.Trim();
+            var value = s.Trim();
             return value.Length > 300 ? value.Substring(0, 300) + "…" : value;
         }
     }

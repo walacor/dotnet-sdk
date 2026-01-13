@@ -18,8 +18,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Walacor_SDK.Client.Exceptions;
 using Walacor_SDK.Models.Auth;
 using Walacor_SDK.W_Client.Abstractions;
+using Walacor_SDK.W_Client.Mappers;
+using Walacor_SDK.W_Client.Options;
 
 namespace Walacor_SDK.W_Client.Auth
 {
@@ -32,7 +35,7 @@ namespace Walacor_SDK.W_Client.Auth
         // In-memory token cache
         private string _token = string.Empty;
 
-        public UsernamePasswordTokenProvider(Uri baseAddress, string userName, string password)
+        public UsernamePasswordTokenProvider(Uri baseAddress, string userName, string password, WalacorHttpClientOptions? options = null)
         {
             if (baseAddress == null)
             {
@@ -41,12 +44,13 @@ namespace Walacor_SDK.W_Client.Auth
 
             this._userName = userName ?? throw new ArgumentNullException(nameof(userName));
             this._password = password ?? throw new ArgumentNullException(nameof(password));
+            var opts = options ?? new WalacorHttpClientOptions();
 
             // Separate client for auth (no auth handler on itself)
             this._authClient = new HttpClient(new HttpClientHandler())
             {
                 BaseAddress = baseAddress,
-                Timeout = TimeSpan.FromSeconds(30),
+                Timeout = opts.Timeout,
             };
         }
 
@@ -66,7 +70,16 @@ namespace Walacor_SDK.W_Client.Auth
             var content = new StringContent(JsonConvert.SerializeObject(bodyObj), Encoding.UTF8, "application/json");
 
             using var res = await this._authClient.PostAsync("/api/auth/login", content, ct).ConfigureAwait(false);
-            res.EnsureSuccessStatusCode();
+            var body = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+            if (!res.IsSuccessStatusCode)
+            {
+                var status = (int)res.StatusCode;
+
+                var err = HttpErrorMapper.FromStatus(status, body);
+
+                throw new WalacorRequestException(err.Message, res.StatusCode, body);
+            }
 
             var json = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
 

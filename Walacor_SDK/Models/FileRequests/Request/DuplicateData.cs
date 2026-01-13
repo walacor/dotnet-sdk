@@ -12,16 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
-namespace Walacor_SDK.W_Client.Options
+namespace Walacor_SDK.Models.FileRequests.Request
 {
-    public sealed class WalacorHttpClientOptions
+    public sealed class DuplicateData
     {
-        public int MaxRetries { get; set; } = 2;
+        public string? EId { get; set; }
 
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(2);
+        public string[]? UID { get; set; }
 
-        public bool ThrowOnValidation422 { get; set; } = true;
+        public string? DH { get; set; }
+
+        public long? CreatedAt { get; set; }
+
+        public string? Signature { get; set; }
+
+        public string? SignatureType { get; set; }
     }
 }

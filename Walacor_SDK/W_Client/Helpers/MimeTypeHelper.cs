@@ -34,6 +34,26 @@ namespace Walacor_SDK.W_Client.Helpers
                 { ".pdf",  "application/pdf" },
             };
 
+        public static string? TryGetExtensionFromMimeType(string? mimeType)
+        {
+            if (string.IsNullOrWhiteSpace(mimeType))
+            {
+                return null;
+            }
+
+            var mt = mimeType?.Split(';')[0].Trim();
+
+            foreach (var kv in Map)
+            {
+                if (string.Equals(kv.Value, mt, StringComparison.OrdinalIgnoreCase))
+                {
+                    return kv.Key; // ".png"
+                }
+            }
+
+            return null;
+        }
+
         public static string GetMimeType(string fileName, string fallback)
         {
             if (string.IsNullOrEmpty(fileName))

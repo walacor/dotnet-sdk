@@ -13,9 +13,7 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using Walacor_SDK.Models.Result;
 using Walacor_SDK.Models.Results;
 
@@ -54,6 +52,36 @@ namespace Walacor_SDK.W_Client.Helpers
             }
         }
 
+        public static Result<string> ResolveDownloadTargetPath(string uid, string? saveTo, string? preferredFileName)
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(saveTo) && HasFileExtension(saveTo))
+                {
+                    return Result<string>.Success(Path.GetFullPath(saveTo), null, null, null);
+                }
+
+                var directory = !string.IsNullOrWhiteSpace(saveTo)
+                    ? Path.GetFullPath(saveTo)
+                    : GetDefaultDownloadDirectory();
+
+                string rawName = preferredFileName ?? uid;
+                if (string.IsNullOrWhiteSpace(rawName))
+                {
+                    rawName = uid;
+                }
+
+                var safeName = SanitizeFileName(rawName);
+
+                return Result<string>.Success(Path.Combine(directory, safeName), null, null, null);
+            }
+            catch
+            {
+                return Result<string>.Fail(
+                    Error.Validation("invalid_path", "The target download path is invalid."), null, null, null);
+            }
+        }
+
         private static bool HasFileExtension(string? path)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -76,6 +104,16 @@ namespace Walacor_SDK.W_Client.Helpers
             var downloads = Path.Combine(home, "Downloads");
             var walacor = Path.Combine(downloads, "Walacor");
             return walacor;
+        }
+
+        private static string SanitizeFileName(string name)
+        {
+            foreach (var c in Path.GetInvalidFileNameChars())
+            {
+                name = name.Replace(c, '_');
+            }
+
+            return name;
         }
     }
 }

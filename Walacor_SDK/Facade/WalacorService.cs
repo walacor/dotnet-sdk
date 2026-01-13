@@ -50,7 +50,7 @@ namespace Walacor_SDK
             var normalizedBase = UriHelper.NormalizeBaseUri(baseUri);
             var apiBase = UriHelper.BuildApiBaseUri(normalizedBase, "api/");
 
-            var tokenProvider = new UsernamePasswordTokenProvider(normalizedBase, userName, password);
+            var tokenProvider = new UsernamePasswordTokenProvider(normalizedBase, userName, password, options);
             var transport = new WalacorHttpClient(apiBase, tokenProvider, options);
 
             this._context = new ClientContext(

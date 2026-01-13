@@ -126,12 +126,84 @@ namespace Walacor_SDK.Services.Impl
 
 #pragma warning disable MA0051 // Method is too long
         public async Task<Result<string>> DownloadAsync(string uid, string? saveTo = null, CancellationToken ct = default)
-        {
 #pragma warning restore MA0051 // Method is too long
+        {
             if (string.IsNullOrWhiteSpace(uid))
             {
                 throw new ArgumentNullException(nameof(uid));
             }
+
+            var listResult = await this.ListFilesAsync(uid: uid, ct: ct).ConfigureAwait(false);
+
+            if (!listResult.IsSuccess || listResult.Value is null || listResult.Value.Count == 0)
+            {
+                return Result<string>.Fail(
+                    listResult.Error ?? Error.NotFound("File not found."),
+                    listResult.StatusCode,
+                    listResult.CorrelationId,
+                    listResult.DurationMs);
+            }
+
+            FileMetadata? meta = listResult.Value.FirstOrDefault();
+            if (meta is null)
+            {
+                return Result<string>.Fail(
+                    Error.NotFound("File not found."),
+                    listResult.StatusCode,
+                    listResult.CorrelationId,
+                    listResult.DurationMs);
+            }
+
+            if (string.Equals(meta.Status, "stored", StringComparison.OrdinalIgnoreCase) == false)
+            {
+                return Result<string>.Fail(
+                    Error.Validation("file_not_ready", $"File is not ready to download. Status: {meta.Status ?? "unknown"}"),
+                    listResult.StatusCode,
+                    listResult.CorrelationId,
+                    listResult.DurationMs);
+            }
+
+            if (meta.IsDeleted == true)
+            {
+                return Result<string>.Fail(
+                    Error.NotFound("File was deleted."),
+                    listResult.StatusCode,
+                    listResult.CorrelationId,
+                    listResult.DurationMs);
+            }
+
+            string preferredFileName;
+
+            var nameFromServer = meta.Name;
+            var mimeFromServer = meta.MimeType;
+
+            if (!string.IsNullOrWhiteSpace(nameFromServer))
+            {
+                preferredFileName = nameFromServer;
+
+                if (string.IsNullOrWhiteSpace(Path.GetExtension(preferredFileName)))
+                {
+                    var ext = MimeTypeHelper.TryGetExtensionFromMimeType(mimeFromServer) ?? ".bin";
+                    preferredFileName += ext;
+                }
+            }
+            else
+            {
+                var ext = MimeTypeHelper.TryGetExtensionFromMimeType(mimeFromServer) ?? ".bin";
+                preferredFileName = uid + ext;
+            }
+
+            var targetPathResult = DownloadHelper.ResolveDownloadTargetPath(uid, saveTo, preferredFileName);
+            if (!targetPathResult.IsSuccess || string.IsNullOrWhiteSpace(targetPathResult.Value))
+            {
+                return Result<string>.Fail(
+                    targetPathResult.Error ?? Error.Validation("invalid_path", "The target download path is invalid."),
+                    null,
+                    null,
+                    null);
+            }
+
+            var filePath = targetPathResult.Value!;
 
             var path = $"{this._segment}/download";
             var body = new { UID = uid };
@@ -151,20 +223,6 @@ namespace Walacor_SDK.Services.Impl
 
             var stream = wireResult.Value;
 
-            var targetPathResult = DownloadHelper.ResolveDownloadTargetPath(uid, saveTo);
-            if (!targetPathResult.IsSuccess || string.IsNullOrWhiteSpace(targetPathResult.Value))
-            {
-                stream.Dispose();
-
-                return Result<string>.Fail(
-                    targetPathResult.Error ?? Error.Validation("invalid_path", "The target download path is invalid."),
-                    wireResult.StatusCode,
-                    wireResult.CorrelationId,
-                    wireResult.DurationMs);
-            }
-
-            var filePath = targetPathResult.Value!;
-
             try
             {
                 var dir = Path.GetDirectoryName(filePath);
@@ -174,11 +232,7 @@ namespace Walacor_SDK.Services.Impl
                 }
 
                 using (stream)
-                using (var fs = new FileStream(
-                    filePath,
-                    FileMode.Create,
-                    FileAccess.Write,
-                    FileShare.None))
+                using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
                     await stream.CopyToAsync(fs, 81920, ct).ConfigureAwait(false);
                 }
@@ -201,7 +255,7 @@ namespace Walacor_SDK.Services.Impl
             }
         }
 
-        public async Task<Result<IReadOnlyList<FileMetadata>>> ListFilesAsync(string? uid = null, int pageSize = 0, int pageNo = 0, bool fromSummary = false, bool totalReq = true, CancellationToken ct = default)
+        public async Task<Result<IReadOnlyList<FileMetadata>>> ListFilesAsync(string? uid = null, int pageSize = 0, int pageNo = 0, bool fromSummary = true, bool totalReq = true, CancellationToken ct = default)
         {
             var path = "query/get";
 

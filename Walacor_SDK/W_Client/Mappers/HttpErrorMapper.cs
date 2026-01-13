@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using Newtonsoft.Json.Linq;
+using Walacor_SDK.Models.FileRequests.Request;
 using Walacor_SDK.Models.Result;
 
 namespace Walacor_SDK.W_Client.Mappers
@@ -27,6 +28,12 @@ namespace Walacor_SDK.W_Client.Mappers
                 return parsed;
             }
 
+            var dup = TryMapDuplicateData(statusCode, body);
+            if (dup is not null)
+            {
+                return dup;
+            }
+
             return statusCode switch
             {
                 400 => Error.Validation("bad_request", "The request was invalid."),
@@ -37,6 +44,41 @@ namespace Walacor_SDK.W_Client.Mappers
                 >= 500 and < 600 => Error.Server($"Server error ({statusCode})."),
                 _ => Error.Unknown($"HTTP {statusCode}. {Trim(body)}"),
             };
+        }
+
+        private static Error? TryMapDuplicateData(int statusCode, string body, int? bodyCode, JObject obj)
+        {
+            var effective = bodyCode ?? statusCode;
+
+            if (effective != 422)
+            {
+                return null;
+            }
+
+            if (obj["duplicateData"] is not JObject dupObj)
+            {
+                return null;
+            }
+
+            var dup = dupObj.ToObject<DuplicateData>();
+            if (dup is null || dup.UID is null || dup.UID.Length == 0)
+            {
+                return null;
+            }
+
+            var err = Error.Validation("duplicate_file", "Duplicate file detected.");
+
+            // ONE structured object (your preference)
+            err.Details["duplicateData"] = dup;
+
+            // keep existing diagnostics pattern
+            err.Details["rawBody"] = Trim(body);
+            if (bodyCode.HasValue)
+            {
+                err.Details["code"] = bodyCode.Value;
+            }
+
+            return err;
         }
 
         private static Error? TryParseStructuredError(int statusCode, string body)
@@ -63,19 +105,16 @@ namespace Walacor_SDK.W_Client.Mappers
                 var bodyCode = obj["code"]?.Value<int?>();
                 var errors = obj["errors"] as JArray;
 
-                // Try shape 1: { "errors": [ { "reason": "..", "message": ".." } ], "code": 400 }
                 var fromArray = TryMapErrorsArray(statusCode, body, bodyCode, errors);
                 if (fromArray is not null)
                 {
                     return fromArray;
                 }
 
-                // Try shape 2: { "error": "Expected double-quoted property name ..." }
                 return TryMapSingleError(statusCode, body, bodyCode, obj);
             }
             catch
             {
-                // JSON invalid – fall back to generic mapping
                 return null;
             }
         }

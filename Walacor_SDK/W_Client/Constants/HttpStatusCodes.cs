@@ -14,10 +14,14 @@
 
 namespace Walacor_SDK.W_Client.Constants
 {
-    internal static class MediaTypeNames
+    internal static class HttpStatusCodes
     {
-        public const string ApplicationJson = "application/json";
-        public const string ApplicationOctetStream = "application/octet-stream";
-        public const string BearerPrefix = "Bearer ";
+        public const int BadRequest = 400;
+        public const int Unauthorized = 401;
+        public const int NotFound = 404;
+
+        public const int RequestTimeout = 408;
+        public const int TooManyRequests = 429;
+        public const int UnprocessableEntity = 422;
     }
 }

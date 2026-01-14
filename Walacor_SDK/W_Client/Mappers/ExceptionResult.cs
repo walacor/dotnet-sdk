@@ -19,6 +19,7 @@ using Walacor_SDK.Client.Exceptions;
 using Walacor_SDK.Client.Pipeline;
 using Walacor_SDK.Models.Result;
 using Walacor_SDK.Models.Results;
+using Walacor_SDK.W_Client.Constants;
 
 namespace Walacor_SDK.W_Client.Mappers
 {
@@ -38,12 +39,15 @@ namespace Walacor_SDK.W_Client.Mappers
 
             if (ex is WalacorAuthException aex)
             {
-                return Result<T>.Fail(Error.Unauthorized(aex.Message), 401, ExtractCorr(aex));
+                return Result<T>.Fail(Error.Unauthorized(aex.Message), HttpStatusCodes.Unauthorized, ExtractCorr(aex));
             }
 
             if (ex is WalacorValidationException vex)
             {
-                return Result<T>.Fail(Error.Validation("validation_failed", vex.Message), 422, ExtractCorr(vex));
+                return Result<T>.Fail(
+                    Error.Validation(ErrorCodes.ValidationFailed, vex.Message),
+                    HttpStatusCodes.UnprocessableEntity,
+                    ExtractCorr(vex));
             }
 
             if (ex is WalacorServerException sex)
@@ -54,9 +58,12 @@ namespace Walacor_SDK.W_Client.Mappers
             if (ex is WalacorRequestException rex)
             {
                 var status = TryGetStatus(rex);
-                var err = status == 404 ? Error.NotFound()
-                        : status == 400 ? Error.Validation("bad_request", rex.Message)
-                        : Error.Unknown(rex.Message);
+
+                var err =
+                    status == HttpStatusCodes.NotFound ? Error.NotFound()
+                    : status == HttpStatusCodes.BadRequest ? Error.Validation(ErrorCodes.BadRequest, rex.Message)
+                    : Error.Unknown(rex.Message);
+
                 return Result<T>.Fail(err, status, ExtractCorr(rex));
             }
 

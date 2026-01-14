@@ -14,10 +14,13 @@
 
 namespace Walacor_SDK.W_Client.Constants
 {
-    internal static class MediaTypeNames
+    internal static class ErrorDetailKeys
     {
-        public const string ApplicationJson = "application/json";
-        public const string ApplicationOctetStream = "application/octet-stream";
-        public const string BearerPrefix = "Bearer ";
+        public const string Reason = "reason";
+        public const string Errors = "errors";
+        public const string Code = "code";
+        public const string HttpStatus = "httpStatus";
+        public const string DuplicateData = "duplicateData";
+        public const string RawBody = "rawBody";
     }
 }

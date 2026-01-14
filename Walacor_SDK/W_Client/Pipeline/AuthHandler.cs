@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Walacor_SDK.Client.Extensions;
 using Walacor_SDK.W_Client.Abstractions;
+using Walacor_SDK.W_Client.Constants;
 
 namespace Walacor_SDK.Client.Pipeline
 {
@@ -34,7 +35,7 @@ namespace Walacor_SDK.Client.Pipeline
             var token = await this._tokens.GetTokenAsync(ct).ConfigureAwait(false);
             if (!string.IsNullOrEmpty(token))
             {
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                request.Headers.Authorization = new AuthenticationHeaderValue(MediaTypeNames.BearerPrefix, token);
             }
 
             var response = await base.SendAsync(request, ct).ConfigureAwait(false);
@@ -58,7 +59,7 @@ namespace Walacor_SDK.Client.Pipeline
             var retry = await request.CloneAsync().ConfigureAwait(false);
             if (!string.IsNullOrEmpty(token))
             {
-                retry.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                retry.Headers.Authorization = new AuthenticationHeaderValue(MediaTypeNames.BearerPrefix, token);
             }
 
             var second = await base.SendAsync(retry, ct).ConfigureAwait(false);

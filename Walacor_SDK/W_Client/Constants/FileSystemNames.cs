@@ -14,10 +14,11 @@
 
 namespace Walacor_SDK.W_Client.Constants
 {
-    internal static class MediaTypeNames
+    internal static class FileSystemNames
     {
-        public const string ApplicationJson = "application/json";
-        public const string ApplicationOctetStream = "application/octet-stream";
-        public const string BearerPrefix = "Bearer ";
+        public const string DownloadsDirectoryName = "Downloads";
+        public const string WalacorDirectoryName = "Walacor";
+
+        public const char InvalidFileNameReplacementChar = '_';
     }
 }

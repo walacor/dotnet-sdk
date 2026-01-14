@@ -14,10 +14,13 @@
 
 namespace Walacor_SDK.W_Client.Constants
 {
-    internal static class MediaTypeNames
+    internal static class CorrelationConstants
     {
-        public const string ApplicationJson = "application/json";
-        public const string ApplicationOctetStream = "application/octet-stream";
-        public const string BearerPrefix = "Bearer ";
+        public const string CorrelationHeader = "X-Request-ID";
+
+        public const string CorrelationKey = "Walacor.CorrelationId";
+        public const string DurationKey = "Walacor.Duration";
+
+        public const string GuidFormatCompact = "N";
     }
 }

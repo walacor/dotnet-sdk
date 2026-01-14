@@ -14,10 +14,10 @@
 
 namespace Walacor_SDK.W_Client.Constants
 {
-    internal static class MediaTypeNames
+    internal static class ResponseMapperMessages
     {
-        public const string ApplicationJson = "application/json";
-        public const string ApplicationOctetStream = "application/octet-stream";
-        public const string BearerPrefix = "Bearer ";
+        public const string InvalidEnvelopeFormat = "Invalid envelope format.";
+        public const string EnvelopeSuccessButDataNull = "Envelope is successful but 'Data' is null.";
+        public const string OperationFailed = "Operation failed.";
     }
 }

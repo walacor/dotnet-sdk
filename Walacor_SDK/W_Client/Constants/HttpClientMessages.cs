@@ -14,10 +14,12 @@
 
 namespace Walacor_SDK.W_Client.Constants
 {
-    internal static class MediaTypeNames
+    internal static class HttpClientMessages
     {
-        public const string ApplicationJson = "application/json";
-        public const string ApplicationOctetStream = "application/octet-stream";
-        public const string BearerPrefix = "Bearer ";
+        public const string NoContent = "No content.";
+        public const string EmptyResponseBody = "Empty response body.";
+
+        public const string UnknownContentType = "unknown";
+        public const string UnexpectedContentTypeFormat = "Unexpected content type: {0}";
     }
 }

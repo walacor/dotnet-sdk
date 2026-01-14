@@ -22,6 +22,7 @@ using Walacor_SDK.Models.DataRequests.Response;
 using Walacor_SDK.Models.Result;
 using Walacor_SDK.Models.Results;
 using Walacor_SDK.Services.Abs;
+using Walacor_SDK.W_Client.Constants;
 using Walacor_SDK.W_Client.Context;
 
 namespace Walacor_SDK.Services.Impl
@@ -31,28 +32,32 @@ namespace Walacor_SDK.Services.Impl
         private readonly ClientContext _ctx;
         private readonly string _segment;
 
-        public DataRequestsService(ClientContext ctx, string segment = "envelopes")
+        public DataRequestsService(ClientContext ctx, string segment = ApiSegments.Envelopes)
         {
             this._ctx = ctx ?? throw new ArgumentNullException(nameof(ctx));
-            this._segment = string.IsNullOrWhiteSpace(segment) ? "envelopes" : segment.Trim('/');
+            this._segment = string.IsNullOrWhiteSpace(segment) ? ApiSegments.Envelopes : segment.Trim('/');
         }
 
         public async Task<Result<SubmissionResult>> InsertSingleRecordAsync(object jsonRecord, int etId, CancellationToken ct = default)
         {
-            var path = $"{this._segment}/submit";
+            var path = $"{this._segment}/{ApiRoutes.Submit}";
 
             var body = new Dictionary<string, object>(StringComparer.Ordinal)
             {
-                ["Data"] = new[] { jsonRecord },
+                [JsonFieldNames.Data] = new[] { jsonRecord },
             };
 
             var headers = new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                ["ETId"] = etId.ToString(CultureInfo.InvariantCulture),
+                [HeaderNames.ETId] = etId.ToString(CultureInfo.InvariantCulture),
             };
 
             var res = await this._ctx.Transport
-                .PostJsonWithHeadersAsync<Dictionary<string, object>, SubmissionResult>(path, body, headers: headers, ct: ct)
+                .PostJsonWithHeadersAsync<Dictionary<string, object>, SubmissionResult>(
+                    path,
+                    body,
+                    headers: headers,
+                    ct: ct)
                 .ConfigureAwait(false);
 
             return res;
@@ -60,13 +65,24 @@ namespace Walacor_SDK.Services.Impl
 
         public async Task<Result<SubmissionResult>> InsertMultipleRecordsAsync(IEnumerable<Dictionary<string, object>> records, int etId, CancellationToken ct = default)
         {
-            var path = $"{this._segment}/submit";
+            var path = $"{this._segment}/{ApiRoutes.Submit}";
 
-            var payload = new Dictionary<string, object>(StringComparer.Ordinal) { ["Data"] = records };
-            var headers = new Dictionary<string, string>(StringComparer.Ordinal) { { "ETId", etId.ToString(CultureInfo.InvariantCulture) } };
+            var payload = new Dictionary<string, object>(StringComparer.Ordinal)
+            {
+                [JsonFieldNames.Data] = records,
+            };
+
+            var headers = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [HeaderNames.ETId] = etId.ToString(CultureInfo.InvariantCulture),
+            };
 
             var res = await this._ctx.Transport
-                .PostJsonWithHeadersAsync<Dictionary<string, object>, SubmissionResult>(path, payload, headers: headers, ct: ct)
+                .PostJsonWithHeadersAsync<Dictionary<string, object>, SubmissionResult>(
+                    path,
+                    payload,
+                    headers: headers,
+                    ct: ct)
                 .ConfigureAwait(false);
 
             return res;
@@ -74,18 +90,30 @@ namespace Walacor_SDK.Services.Impl
 
         public async Task<Result<SubmissionResult>> UpdateSingleRecordWithUidAsync(IDictionary<string, object> record, int etId, CancellationToken ct = default)
         {
-            var path = $"{this._segment}/submit";
+            var path = $"{this._segment}/{ApiRoutes.Submit}";
 
-            if (!record.ContainsKey("UID"))
+            if (!record.ContainsKey(JsonFieldNames.UID))
             {
-                return Result<SubmissionResult>.Fail(Error.Validation("uid_missing", "UID is required to update a record."));
+                return Result<SubmissionResult>.Fail(
+                    Error.Validation(ErrorCodes.UidMissing, ErrorMessages.UidRequiredToUpdate));
             }
 
-            var headers = new Dictionary<string, string>(StringComparer.Ordinal) { { "ETId", etId.ToString(CultureInfo.InvariantCulture) } };
-            var payload = new Dictionary<string, object>(StringComparer.Ordinal) { ["Data"] = new[] { record } };
+            var headers = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [HeaderNames.ETId] = etId.ToString(CultureInfo.InvariantCulture),
+            };
+
+            var payload = new Dictionary<string, object>(StringComparer.Ordinal)
+            {
+                [JsonFieldNames.Data] = new[] { record },
+            };
 
             var res = await this._ctx.Transport
-                .PostJsonWithHeadersAsync<Dictionary<string, object>, SubmissionResult>(path, payload, headers: headers, ct: ct)
+                .PostJsonWithHeadersAsync<Dictionary<string, object>, SubmissionResult>(
+                    path,
+                    payload,
+                    headers: headers,
+                    ct: ct)
                 .ConfigureAwait(false);
 
             return res;
@@ -98,80 +126,119 @@ namespace Walacor_SDK.Services.Impl
             if (recordList.Count == 0)
             {
                 return Result<SubmissionResult>.Fail(
-                    Error.Validation("records_empty", "At least one record is required."));
+                    Error.Validation(ErrorCodes.RecordsEmpty, ErrorMessages.RecordsAtLeastOneRequired));
             }
 
             foreach (var record in recordList)
             {
-                if (!record.ContainsKey("UID"))
+                if (!record.ContainsKey(JsonFieldNames.UID))
                 {
                     return Result<SubmissionResult>.Fail(
-                        Error.Validation("uid_missing", "All records must contain a UID field."));
+                        Error.Validation(ErrorCodes.UidMissing, ErrorMessages.AllRecordsMustContainUid));
                 }
             }
 
-            var path = $"{this._segment}/submit";
+            var path = $"{this._segment}/{ApiRoutes.Submit}";
 
             var headers = new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                { "ETId", etId.ToString(CultureInfo.InvariantCulture) },
+                [HeaderNames.ETId] = etId.ToString(CultureInfo.InvariantCulture),
             };
 
             var payload = new Dictionary<string, object>(StringComparer.Ordinal)
             {
-                ["Data"] = recordList,
+                [JsonFieldNames.Data] = recordList,
             };
 
             var res = await this._ctx.Transport
                 .PostJsonWithHeadersAsync<Dictionary<string, object>, SubmissionResult>(
-                    path, payload, headers: headers, ct: ct)
+                    path,
+                    payload,
+                    headers: headers,
+                    ct: ct)
                 .ConfigureAwait(false);
 
             return res;
         }
 
-        public async Task<Result<IReadOnlyList<Dictionary<string, object>>>> GetAllAsync(int etId, int pageNumber = 0, int pageSize = 0, bool fromSummary = true, CancellationToken ct = default)
+        public async Task<Result<IReadOnlyList<Dictionary<string, object>>>> GetAllAsync(
+            int etId,
+            int pageNumber = 0,
+            int pageSize = 0,
+            bool fromSummary = true,
+            CancellationToken ct = default)
         {
-            var path = "query/get";
-
-            var headers = new Dictionary<string, string>(StringComparer.Ordinal) { { "ETId", etId.ToString(CultureInfo.InvariantCulture) } };
-
-            var query = new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                ["pageNo"] = pageNumber.ToString(CultureInfo.InvariantCulture),
-                ["pageSize"] = pageSize.ToString(CultureInfo.InvariantCulture),
-                ["fromSummary"] = fromSummary ? "true" : "false",
-            };
-
-            var res = await this._ctx.Transport
-                .PostJsonWithHeadersAsync<object, List<Dictionary<string, object>>>(path, new { }, query, headers, ct)
-                .ConfigureAwait(false);
-
-            return res.Map(list => (IReadOnlyList<Dictionary<string, object>>)list.AsReadOnly());
-        }
-
-        public async Task<Result<IReadOnlyList<Dictionary<string, object>>>> GetSingleRecordByIdAsync(string recordId, int etId, bool fromSummary = false, CancellationToken ct = default)
-        {
-            var path = "query/get";
-
-            var headers = new Dictionary<string, string>(StringComparer.Ordinal) { { "ETId", etId.ToString(CultureInfo.InvariantCulture) } };
-            var query = new Dictionary<string, string>(StringComparer.Ordinal) { { "fromSummary", fromSummary ? "true" : "false" } };
-            var body = new Dictionary<string, string>(StringComparer.Ordinal) { { "au_id", recordId } };
-
-            var res = await this._ctx.Transport
-                .PostJsonWithHeadersAsync<object, List<Dictionary<string, object>>>(path, body, query, headers, ct)
-                .ConfigureAwait(false);
-
-            return res.Map(list => (IReadOnlyList<Dictionary<string, object>>)list.AsReadOnly());
-        }
-
-        public async Task<Result<IReadOnlyList<Dictionary<string, object>>>> PostComplexQueryAsync(int etId, IReadOnlyList<IReadOnlyDictionary<string, object>> pipeline, CancellationToken ct = default)
-        {
-            var path = "query/getcomplex";
+            var path = ApiRoutes.QueryGet;
 
             var headers = new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                ["ETId"] = etId.ToString(CultureInfo.InvariantCulture),
+                [HeaderNames.ETId] = etId.ToString(CultureInfo.InvariantCulture),
+            };
+
+            var query = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [QueryParamNames.PageNo] = pageNumber.ToString(CultureInfo.InvariantCulture),
+                [QueryParamNames.PageSize] = pageSize.ToString(CultureInfo.InvariantCulture),
+                [QueryParamNames.FromSummary] = fromSummary ? BooleanStrings.True : BooleanStrings.False,
+            };
+
+            var res = await this._ctx.Transport
+                .PostJsonWithHeadersAsync<object, List<Dictionary<string, object>>>(
+                    path,
+                    new { },
+                    query,
+                    headers,
+                    ct)
+                .ConfigureAwait(false);
+
+            return res.Map(list => (IReadOnlyList<Dictionary<string, object>>)list.AsReadOnly());
+        }
+
+        public async Task<Result<IReadOnlyList<Dictionary<string, object>>>> GetSingleRecordByIdAsync(
+            string recordId,
+            int etId,
+            bool fromSummary = false,
+            CancellationToken ct = default)
+        {
+            var path = ApiRoutes.QueryGet;
+
+            var headers = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [HeaderNames.ETId] = etId.ToString(CultureInfo.InvariantCulture),
+            };
+
+            var query = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [QueryParamNames.FromSummary] = fromSummary ? BooleanStrings.True : BooleanStrings.False,
+            };
+
+            var body = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [JsonFieldNames.AuId] = recordId,
+            };
+
+            var res = await this._ctx.Transport
+                .PostJsonWithHeadersAsync<object, List<Dictionary<string, object>>>(
+                    path,
+                    body,
+                    query,
+                    headers,
+                    ct)
+                .ConfigureAwait(false);
+
+            return res.Map(list => (IReadOnlyList<Dictionary<string, object>>)list.AsReadOnly());
+        }
+
+        public async Task<Result<IReadOnlyList<Dictionary<string, object>>>> PostComplexQueryAsync(
+            int etId,
+            IReadOnlyList<IReadOnlyDictionary<string, object>> pipeline,
+            CancellationToken ct = default)
+        {
+            var path = ApiRoutes.QueryGetComplexLower;
+
+            var headers = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [HeaderNames.ETId] = etId.ToString(CultureInfo.InvariantCulture),
             };
 
             var res = await this._ctx.Transport
@@ -185,19 +252,26 @@ namespace Walacor_SDK.Services.Impl
             return res.Map(list => (IReadOnlyList<Dictionary<string, object>>)list.AsReadOnly());
         }
 
-        public async Task<Result<IReadOnlyList<Dictionary<string, object>>>> PostQueryApiAsync(int etId, IReadOnlyDictionary<string, object> payload, int schemaVersion = 1, int pageNumber = 1, int pageSize = 0, CancellationToken ct = default)
+        public async Task<Result<IReadOnlyList<Dictionary<string, object>>>> PostQueryApiAsync(
+            int etId,
+            IReadOnlyDictionary<string, object> payload,
+            int schemaVersion = 1,
+            int pageNumber = 1,
+            int pageSize = 0,
+            CancellationToken ct = default)
         {
-            var path = "query/get";
+            var path = ApiRoutes.QueryGet;
+
             var headers = new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                ["ETId"] = etId.ToString(CultureInfo.InvariantCulture),
-                ["SV"] = schemaVersion.ToString(CultureInfo.InvariantCulture),
+                [HeaderNames.ETId] = etId.ToString(CultureInfo.InvariantCulture),
+                [HeaderNames.SV] = schemaVersion.ToString(CultureInfo.InvariantCulture),
             };
 
             var query = new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                ["pageNo"] = pageNumber.ToString(CultureInfo.InvariantCulture),
-                ["pageSize"] = pageSize.ToString(CultureInfo.InvariantCulture),
+                [QueryParamNames.PageNo] = pageNumber.ToString(CultureInfo.InvariantCulture),
+                [QueryParamNames.PageSize] = pageSize.ToString(CultureInfo.InvariantCulture),
             };
 
             var res = await this._ctx.Transport
@@ -212,15 +286,20 @@ namespace Walacor_SDK.Services.Impl
             return res.Map(list => (IReadOnlyList<Dictionary<string, object>>)list.AsReadOnly());
         }
 
-        public async Task<Result<IReadOnlyList<QueryApiAggregate>>> PostQueryApiAggregateAsync(int etId, IReadOnlyList<IReadOnlyDictionary<string, object>> pipeline, int schemaVersion = 1, int dataVersion = 1, CancellationToken ct = default)
+        public async Task<Result<IReadOnlyList<QueryApiAggregate>>> PostQueryApiAggregateAsync(
+            int etId,
+            IReadOnlyList<IReadOnlyDictionary<string, object>> pipeline,
+            int schemaVersion = 1,
+            int dataVersion = 1,
+            CancellationToken ct = default)
         {
-            const string path = "query/getComplex";
+            const string path = ApiRoutes.QueryGetComplexCamel;
 
             var headers = new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                ["ETId"] = etId.ToString(CultureInfo.InvariantCulture),
-                ["SV"] = schemaVersion.ToString(CultureInfo.InvariantCulture),
-                ["DV"] = dataVersion.ToString(CultureInfo.InvariantCulture),
+                [HeaderNames.ETId] = etId.ToString(CultureInfo.InvariantCulture),
+                [HeaderNames.SV] = schemaVersion.ToString(CultureInfo.InvariantCulture),
+                [HeaderNames.DV] = dataVersion.ToString(CultureInfo.InvariantCulture),
             };
 
             var res = await this._ctx.Transport
@@ -234,13 +313,16 @@ namespace Walacor_SDK.Services.Impl
             return res.Map(list => (IReadOnlyList<QueryApiAggregate>)list.AsReadOnly());
         }
 
-        public async Task<Result<ComplexQMLQueryRecords>> PostComplexMqlQueriesAsync(IEnumerable<IDictionary<string, object>> pipeline, int etId, CancellationToken ct = default)
+        public async Task<Result<ComplexQMLQueryRecords>> PostComplexMqlQueriesAsync(
+            IEnumerable<IDictionary<string, object>> pipeline,
+            int etId,
+            CancellationToken ct = default)
         {
-            const string path = "query/getcomplex";
+            const string path = ApiRoutes.QueryGetComplexLower;
 
             var headers = new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                ["ETId"] = etId.ToString(CultureInfo.InvariantCulture),
+                [HeaderNames.ETId] = etId.ToString(CultureInfo.InvariantCulture),
             };
 
             var res = await this._ctx.Transport

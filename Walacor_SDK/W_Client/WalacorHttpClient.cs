@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -25,6 +26,7 @@ using Walacor_SDK.Client.Transport;
 using Walacor_SDK.Models.Result;
 using Walacor_SDK.Models.Results;
 using Walacor_SDK.W_Client.Abstractions;
+using Walacor_SDK.W_Client.Constants;
 using Walacor_SDK.W_Client.Mappers;
 using Walacor_SDK.W_Client.Options;
 
@@ -81,7 +83,7 @@ namespace Walacor_SDK.Client
             {
                 var uri = AppendQuery(path, query);
                 using var req = new HttpRequestMessage(HttpMethod.Get, uri);
-                req.Headers.Accept.ParseAdd("application/json");
+                req.Headers.Accept.ParseAdd(HttpMediaTypes.ApplicationJson);
 
                 using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
 
@@ -90,7 +92,7 @@ namespace Walacor_SDK.Client
 
                 if (status == 204)
                 {
-                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId, duration);
+                    return Result<TResponse>.Fail(Error.NotFound(HttpClientMessages.NoContent), status, corrId, duration);
                 }
 
                 var mediaType = res.Content.Headers.ContentType?.MediaType;
@@ -100,12 +102,20 @@ namespace Walacor_SDK.Client
                 {
                     if (string.IsNullOrWhiteSpace(body))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId, duration);
+                        return Result<TResponse>.Fail(Error.Deserialization(HttpClientMessages.EmptyResponseBody), status, corrId, duration);
                     }
 
-                    if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
+                    if (!string.Equals(mediaType, HttpMediaTypes.ApplicationJson, StringComparison.OrdinalIgnoreCase))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId, duration);
+                        var ctValue = mediaType ?? HttpClientMessages.UnknownContentType;
+                        return Result<TResponse>.Fail(
+                            Error.Deserialization(string.Format(
+                                CultureInfo.InvariantCulture,
+                                HttpClientMessages.UnexpectedContentTypeFormat,
+                                ctValue)),
+                            status,
+                            corrId,
+                            duration);
                     }
 
                     return ResponseMapper.FromSuccessEnvelope<TResponse>(
@@ -134,8 +144,8 @@ namespace Walacor_SDK.Client
             {
                 var uri = AppendQuery(path, query: null);
                 using var req = new HttpRequestMessage(HttpMethod.Post, uri);
-                req.Headers.Accept.ParseAdd("application/json");
-                req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, "application/json");
+                req.Headers.Accept.ParseAdd(HttpMediaTypes.ApplicationJson);
+                req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, HttpMediaTypes.ApplicationJson);
 
                 using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
 
@@ -144,7 +154,7 @@ namespace Walacor_SDK.Client
 
                 if (status == 204)
                 {
-                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId, duration);
+                    return Result<TResponse>.Fail(Error.NotFound(HttpClientMessages.NoContent), status, corrId, duration);
                 }
 
                 var mediaType = res.Content.Headers.ContentType?.MediaType;
@@ -154,12 +164,20 @@ namespace Walacor_SDK.Client
                 {
                     if (string.IsNullOrWhiteSpace(bodyText))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId, duration);
+                        return Result<TResponse>.Fail(Error.Deserialization(HttpClientMessages.EmptyResponseBody), status, corrId, duration);
                     }
 
-                    if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
+                    if (!string.Equals(mediaType, HttpMediaTypes.ApplicationJson, StringComparison.OrdinalIgnoreCase))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId, duration);
+                        var ctValue = mediaType ?? HttpClientMessages.UnknownContentType;
+                        return Result<TResponse>.Fail(
+                            Error.Deserialization(string.Format(
+                                CultureInfo.InvariantCulture,
+                                HttpClientMessages.UnexpectedContentTypeFormat,
+                                ctValue)),
+                            status,
+                            corrId,
+                            duration);
                     }
 
                     return ResponseMapper.FromSuccessEnvelope<TResponse>(
@@ -188,8 +206,8 @@ namespace Walacor_SDK.Client
             {
                 var uri = AppendQuery(path, query: null);
                 using var req = new HttpRequestMessage(HttpMethod.Put, uri);
-                req.Headers.Accept.ParseAdd("application/json");
-                req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, "application/json");
+                req.Headers.Accept.ParseAdd(HttpMediaTypes.ApplicationJson);
+                req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, HttpMediaTypes.ApplicationJson);
 
                 using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
 
@@ -198,7 +216,7 @@ namespace Walacor_SDK.Client
 
                 if (status == 204)
                 {
-                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId, duration);
+                    return Result<TResponse>.Fail(Error.NotFound(HttpClientMessages.NoContent), status, corrId, duration);
                 }
 
                 var mediaType = res.Content.Headers.ContentType?.MediaType;
@@ -208,12 +226,20 @@ namespace Walacor_SDK.Client
                 {
                     if (string.IsNullOrWhiteSpace(bodyText))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId, duration);
+                        return Result<TResponse>.Fail(Error.Deserialization(HttpClientMessages.EmptyResponseBody), status, corrId, duration);
                     }
 
-                    if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
+                    if (!string.Equals(mediaType, HttpMediaTypes.ApplicationJson, StringComparison.OrdinalIgnoreCase))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId, duration);
+                        var ctValue = mediaType ?? HttpClientMessages.UnknownContentType;
+                        return Result<TResponse>.Fail(
+                            Error.Deserialization(string.Format(
+                                CultureInfo.InvariantCulture,
+                                HttpClientMessages.UnexpectedContentTypeFormat,
+                                ctValue)),
+                            status,
+                            corrId,
+                            duration);
                     }
 
                     return ResponseMapper.FromSuccessEnvelope<TResponse>(
@@ -241,7 +267,7 @@ namespace Walacor_SDK.Client
             {
                 var uri = AppendQuery(path, query: null);
                 using var req = new HttpRequestMessage(HttpMethod.Delete, uri);
-                req.Headers.Accept.ParseAdd("application/json");
+                req.Headers.Accept.ParseAdd(HttpMediaTypes.ApplicationJson);
 
                 using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
 
@@ -273,7 +299,7 @@ namespace Walacor_SDK.Client
             {
                 var uri = AppendQuery(path, query);
                 using var req = new HttpRequestMessage(HttpMethod.Get, uri);
-                req.Headers.Accept.ParseAdd("application/json");
+                req.Headers.Accept.ParseAdd(HttpMediaTypes.ApplicationJson);
                 ApplyHeaders(req, headers);
 
                 using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
@@ -283,7 +309,7 @@ namespace Walacor_SDK.Client
 
                 if (status == 204)
                 {
-                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId, duration);
+                    return Result<TResponse>.Fail(Error.NotFound(HttpClientMessages.NoContent), status, corrId, duration);
                 }
 
                 var mediaType = res.Content.Headers.ContentType?.MediaType;
@@ -293,12 +319,20 @@ namespace Walacor_SDK.Client
                 {
                     if (string.IsNullOrWhiteSpace(bodyText))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId, duration);
+                        return Result<TResponse>.Fail(Error.Deserialization(HttpClientMessages.EmptyResponseBody), status, corrId, duration);
                     }
 
-                    if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
+                    if (!string.Equals(mediaType, HttpMediaTypes.ApplicationJson, StringComparison.OrdinalIgnoreCase))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId, duration);
+                        var ctValue = mediaType ?? HttpClientMessages.UnknownContentType;
+                        return Result<TResponse>.Fail(
+                            Error.Deserialization(string.Format(
+                                CultureInfo.InvariantCulture,
+                                HttpClientMessages.UnexpectedContentTypeFormat,
+                                ctValue)),
+                            status,
+                            corrId,
+                            duration);
                     }
 
                     return ResponseMapper.FromSuccessEnvelope<TResponse>(
@@ -329,8 +363,8 @@ namespace Walacor_SDK.Client
             {
                 var uri = AppendQuery(path, query);
                 using var req = new HttpRequestMessage(HttpMethod.Post, uri);
-                req.Headers.Accept.ParseAdd("application/json");
-                req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, "application/json");
+                req.Headers.Accept.ParseAdd(HttpMediaTypes.ApplicationJson);
+                req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, HttpMediaTypes.ApplicationJson);
                 ApplyHeaders(req, headers);
 
                 using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
@@ -340,7 +374,7 @@ namespace Walacor_SDK.Client
 
                 if (status == 204)
                 {
-                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId, duration);
+                    return Result<TResponse>.Fail(Error.NotFound(HttpClientMessages.NoContent), status, corrId, duration);
                 }
 
                 var mediaType = res.Content.Headers.ContentType?.MediaType;
@@ -350,12 +384,20 @@ namespace Walacor_SDK.Client
                 {
                     if (string.IsNullOrWhiteSpace(bodyText))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId, duration);
+                        return Result<TResponse>.Fail(Error.Deserialization(HttpClientMessages.EmptyResponseBody), status, corrId, duration);
                     }
 
-                    if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
+                    if (!string.Equals(mediaType, HttpMediaTypes.ApplicationJson, StringComparison.OrdinalIgnoreCase))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId, duration);
+                        var ctValue = mediaType ?? HttpClientMessages.UnknownContentType;
+                        return Result<TResponse>.Fail(
+                            Error.Deserialization(string.Format(
+                                CultureInfo.InvariantCulture,
+                                HttpClientMessages.UnexpectedContentTypeFormat,
+                                ctValue)),
+                            status,
+                            corrId,
+                            duration);
                     }
 
                     return ResponseMapper.FromSuccessEnvelope<TResponse>(
@@ -375,19 +417,21 @@ namespace Walacor_SDK.Client
             }
         }
 
+#pragma warning disable MA0051 // Method is too long
         public async Task<Result<TResponse>> PutJsonWithHeadersAsync<TRequest, TResponse>(
             string path,
             TRequest body,
             IDictionary<string, string>? query = null,
             IDictionary<string, string>? headers = null,
             CancellationToken ct = default)
+#pragma warning restore MA0051 // Method is too long
         {
             try
             {
                 var uri = AppendQuery(path, query);
                 using var req = new HttpRequestMessage(HttpMethod.Put, uri);
-                req.Headers.Accept.ParseAdd("application/json");
-                req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, "application/json");
+                req.Headers.Accept.ParseAdd(HttpMediaTypes.ApplicationJson);
+                req.Content = new StringContent(this._json.Serialize(body!), Encoding.UTF8, HttpMediaTypes.ApplicationJson);
                 ApplyHeaders(req, headers);
 
                 using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
@@ -397,7 +441,7 @@ namespace Walacor_SDK.Client
 
                 if (status == 204)
                 {
-                    return Result<TResponse>.Fail(Error.NotFound("No content."), status, corrId, duration);
+                    return Result<TResponse>.Fail(Error.NotFound(HttpClientMessages.NoContent), status, corrId, duration);
                 }
 
                 var mediaType = res.Content.Headers.ContentType?.MediaType;
@@ -407,12 +451,20 @@ namespace Walacor_SDK.Client
                 {
                     if (string.IsNullOrWhiteSpace(bodyText))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization("Empty response body."), status, corrId, duration);
+                        return Result<TResponse>.Fail(Error.Deserialization(HttpClientMessages.EmptyResponseBody), status, corrId, duration);
                     }
 
-                    if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
+                    if (!string.Equals(mediaType, HttpMediaTypes.ApplicationJson, StringComparison.OrdinalIgnoreCase))
                     {
-                        return Result<TResponse>.Fail(Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"), status, corrId, duration);
+                        var ctValue = mediaType ?? HttpClientMessages.UnknownContentType;
+                        return Result<TResponse>.Fail(
+                            Error.Deserialization(string.Format(
+                                CultureInfo.InvariantCulture,
+                                HttpClientMessages.UnexpectedContentTypeFormat,
+                                ctValue)),
+                            status,
+                            corrId,
+                            duration);
                     }
 
                     return ResponseMapper.FromSuccessEnvelope<TResponse>(
@@ -450,7 +502,7 @@ namespace Walacor_SDK.Client
             {
                 var uri = AppendQuery(path, query);
                 using var req = new HttpRequestMessage(HttpMethod.Delete, uri);
-                req.Headers.Accept.ParseAdd("application/json");
+                req.Headers.Accept.ParseAdd(HttpMediaTypes.ApplicationJson);
                 ApplyHeaders(req, headers);
 
                 using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
@@ -482,7 +534,7 @@ namespace Walacor_SDK.Client
                 var uri = AppendQuery(path, query: null);
                 using var req = new HttpRequestMessage(HttpMethod.Post, uri);
 
-                req.Headers.Accept.ParseAdd("application/json");
+                req.Headers.Accept.ParseAdd(HttpMediaTypes.ApplicationJson);
                 req.Content = content;
 
                 using var res = await this.SendAsync(req, ct).ConfigureAwait(false);
@@ -493,7 +545,7 @@ namespace Walacor_SDK.Client
                 if (status == 204)
                 {
                     return Result<TResponse>.Fail(
-                        Error.NotFound("No content."),
+                        Error.NotFound(HttpClientMessages.NoContent),
                         status,
                         corrId,
                         duration);
@@ -507,16 +559,20 @@ namespace Walacor_SDK.Client
                     if (string.IsNullOrWhiteSpace(bodyText))
                     {
                         return Result<TResponse>.Fail(
-                            Error.Deserialization("Empty response body."),
+                            Error.Deserialization(HttpClientMessages.EmptyResponseBody),
                             status,
                             corrId,
                             duration);
                     }
 
-                    if (!string.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase))
+                    if (!string.Equals(mediaType, HttpMediaTypes.ApplicationJson, StringComparison.OrdinalIgnoreCase))
                     {
+                        var ctValue = mediaType ?? HttpClientMessages.UnknownContentType;
                         return Result<TResponse>.Fail(
-                            Error.Deserialization($"Unexpected content type: {mediaType ?? "unknown"}"),
+                            Error.Deserialization(string.Format(
+                                CultureInfo.InvariantCulture,
+                                HttpClientMessages.UnexpectedContentTypeFormat,
+                                ctValue)),
                             status,
                             corrId,
                             duration);
@@ -549,8 +605,8 @@ namespace Walacor_SDK.Client
                 var uri = AppendQuery(path, query: null);
                 using var req = new HttpRequestMessage(HttpMethod.Post, uri);
 
-                req.Headers.Accept.ParseAdd("*/*");
-                req.Content = new StringContent(this._json.Serialize(body), Encoding.UTF8, "application/json");
+                req.Headers.Accept.ParseAdd(HttpMediaTypes.Any);
+                req.Content = new StringContent(this._json.Serialize(body), Encoding.UTF8, HttpMediaTypes.ApplicationJson);
 
                 var res = await this._http
                     .SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct)
@@ -591,7 +647,7 @@ namespace Walacor_SDK.Client
                 var name = kv.Key;
                 var value = kv.Value ?? string.Empty;
 
-                if (req.Content != null && name.Equals("Content-Type", StringComparison.OrdinalIgnoreCase))
+                if (req.Content != null && name.Equals(HttpHeaderNames.ContentType, StringComparison.OrdinalIgnoreCase))
                 {
                     req.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(value);
                     continue;
@@ -633,12 +689,12 @@ namespace Walacor_SDK.Client
             string? corrId = null;
             long? duration = null;
 
-            if (res.Headers.TryGetValues("X-Request-ID", out var vals))
+            if (res.Headers.TryGetValues(CorrelationConstants.CorrelationHeader, out var vals))
             {
                 corrId = vals.FirstOrDefault();
             }
 
-            if (res.RequestMessage?.Properties.TryGetValue("Walacor.Duration", out var durObj) == true)
+            if (res.RequestMessage?.Properties.TryGetValue(CorrelationConstants.DurationKey, out var durObj) == true)
             {
                 if (durObj is long d)
                 {

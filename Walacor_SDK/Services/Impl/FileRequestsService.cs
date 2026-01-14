@@ -26,6 +26,7 @@ using Walacor_SDK.Models.FileRequests.Response;
 using Walacor_SDK.Models.Result;
 using Walacor_SDK.Models.Results;
 using Walacor_SDK.Services.Abs;
+using Walacor_SDK.W_Client.Constants;
 using Walacor_SDK.W_Client.Context;
 using Walacor_SDK.W_Client.Helpers;
 using FileInfo = Walacor_SDK.Models.FileRequests.Response.FileInfo;
@@ -37,15 +38,13 @@ namespace Walacor_SDK.Services.Impl
         private readonly ClientContext _ctx;
         private readonly string _segment;
 
-        public FileRequestsService(ClientContext ctx, string segment = "v2/files")
+        public FileRequestsService(ClientContext ctx, string segment = ApiSegments.FilesV2)
         {
             this._ctx = ctx ?? throw new ArgumentNullException(nameof(ctx));
-            this._segment = string.IsNullOrWhiteSpace(segment) ? "v2/files" : segment.Trim('/');
+            this._segment = string.IsNullOrWhiteSpace(segment) ? ApiSegments.FilesV2 : segment.Trim('/');
         }
 
-        public async Task<Result<FileVerificationResult>> VerifyAsync(
-            VerifySingleFileRequest request,
-            CancellationToken ct = default)
+        public async Task<Result<FileVerificationResult>> VerifyAsync(VerifySingleFileRequest request, CancellationToken ct = default)
         {
             if (request is null)
             {
@@ -57,24 +56,23 @@ namespace Walacor_SDK.Services.Impl
             if (!File.Exists(fullPath))
             {
                 return Result<FileVerificationResult>.Fail(
-                    Error.Validation("file_not_found", "The file to verify does not exist."),
+                    Error.Validation(ErrorCodes.FileNotFound, ErrorMessages.FileToVerifyDoesNotExist),
                     null,
                     null);
             }
 
             var fileName = request.FileName;
             var mimeType = request.MimeType
-                            ?? MimeTypeHelper.GetMimeType(fileName, "application/octet-stream");
+                            ?? MimeTypeHelper.GetMimeType(fileName, MediaTypeNames.ApplicationOctetStream);
 
             using var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
             using var fileContent = new StreamContent(stream);
             fileContent.Headers.ContentType = new MediaTypeHeaderValue(mimeType);
 
             using var multipart = new MultipartFormDataContent();
+            multipart.Add(fileContent, JsonFieldNames.MultipartFileField, fileName);
 
-            multipart.Add(fileContent, "file", fileName);
-
-            var path = string.Concat(this._segment, "/verify");
+            var path = string.Concat(this._segment, "/", ApiRoutes.Verify);
 
             var wireResult = await this._ctx.Transport
                 .PostMultipartAsync<VerifyResponseDto>(path, multipart, ct)
@@ -83,7 +81,7 @@ namespace Walacor_SDK.Services.Impl
             if (!wireResult.IsSuccess || wireResult.Value is null)
             {
                 return Result<FileVerificationResult>.Fail(
-                    wireResult.Error ?? Error.Unknown("Verification failed."),
+                    wireResult.Error ?? Error.Unknown(ErrorMessages.VerificationFailed),
                     wireResult.StatusCode,
                     wireResult.CorrelationId);
             }
@@ -93,7 +91,7 @@ namespace Walacor_SDK.Services.Impl
             if (dto.FileInfo is null)
             {
                 return Result<FileVerificationResult>.Fail(
-                    Error.Deserialization("Verify response did not contain 'fileInfo'."),
+                    Error.Deserialization(ErrorMessages.VerifyResponseMissingFileInfo),
                     wireResult.StatusCode,
                     wireResult.CorrelationId);
             }
@@ -113,15 +111,12 @@ namespace Walacor_SDK.Services.Impl
                 throw new ArgumentNullException(nameof(fileInfo));
             }
 
-            var path = $"{this._segment}/store";
-
+            var path = $"{this._segment}/{ApiRoutes.Store}";
             var payload = new StoreFileRequest(fileInfo);
 
-            var res = await this._ctx.Transport
+            return await this._ctx.Transport
                 .PostJsonAsync<StoreFileRequest, StoreFileData>(path, payload, ct)
                 .ConfigureAwait(false);
-
-            return res;
         }
 
 #pragma warning disable MA0051 // Method is too long
@@ -138,7 +133,7 @@ namespace Walacor_SDK.Services.Impl
             if (!listResult.IsSuccess || listResult.Value is null || listResult.Value.Count == 0)
             {
                 return Result<string>.Fail(
-                    listResult.Error ?? Error.NotFound("File not found."),
+                    listResult.Error ?? Error.NotFound(ErrorMessages.FileNotFound),
                     listResult.StatusCode,
                     listResult.CorrelationId,
                     listResult.DurationMs);
@@ -148,16 +143,16 @@ namespace Walacor_SDK.Services.Impl
             if (meta is null)
             {
                 return Result<string>.Fail(
-                    Error.NotFound("File not found."),
+                    Error.NotFound(ErrorMessages.FileNotFound),
                     listResult.StatusCode,
                     listResult.CorrelationId,
                     listResult.DurationMs);
             }
 
-            if (string.Equals(meta.Status, "stored", StringComparison.OrdinalIgnoreCase) == false)
+            if (string.Equals(meta.Status, FileConstants.StoredStatus, StringComparison.OrdinalIgnoreCase) == false)
             {
                 return Result<string>.Fail(
-                    Error.Validation("file_not_ready", $"File is not ready to download. Status: {meta.Status ?? "unknown"}"),
+                    Error.Validation(ErrorCodes.FileNotReady, ErrorMessageFactory.FileNotReady(meta.Status)),
                     listResult.StatusCode,
                     listResult.CorrelationId,
                     listResult.DurationMs);
@@ -166,7 +161,7 @@ namespace Walacor_SDK.Services.Impl
             if (meta.IsDeleted == true)
             {
                 return Result<string>.Fail(
-                    Error.NotFound("File was deleted."),
+                    Error.NotFound(ErrorMessages.FileWasDeleted),
                     listResult.StatusCode,
                     listResult.CorrelationId,
                     listResult.DurationMs);
@@ -183,13 +178,13 @@ namespace Walacor_SDK.Services.Impl
 
                 if (string.IsNullOrWhiteSpace(Path.GetExtension(preferredFileName)))
                 {
-                    var ext = MimeTypeHelper.TryGetExtensionFromMimeType(mimeFromServer) ?? ".bin";
+                    var ext = MimeTypeHelper.TryGetExtensionFromMimeType(mimeFromServer) ?? FileConstants.DefaultBinaryExtension;
                     preferredFileName += ext;
                 }
             }
             else
             {
-                var ext = MimeTypeHelper.TryGetExtensionFromMimeType(mimeFromServer) ?? ".bin";
+                var ext = MimeTypeHelper.TryGetExtensionFromMimeType(mimeFromServer) ?? FileConstants.DefaultBinaryExtension;
                 preferredFileName = uid + ext;
             }
 
@@ -197,7 +192,7 @@ namespace Walacor_SDK.Services.Impl
             if (!targetPathResult.IsSuccess || string.IsNullOrWhiteSpace(targetPathResult.Value))
             {
                 return Result<string>.Fail(
-                    targetPathResult.Error ?? Error.Validation("invalid_path", "The target download path is invalid."),
+                    targetPathResult.Error ?? Error.Validation(ErrorCodes.InvalidPath, ErrorMessages.TargetDownloadPathInvalid),
                     null,
                     null,
                     null);
@@ -205,8 +200,11 @@ namespace Walacor_SDK.Services.Impl
 
             var filePath = targetPathResult.Value!;
 
-            var path = $"{this._segment}/download";
-            var body = new { UID = uid };
+            var path = $"{this._segment}/{ApiRoutes.Download}";
+            var body = new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [JsonFieldNames.UID] = uid,
+            };
 
             var wireResult = await this._ctx.Transport
                 .PostJsonForStreamAsync(path, body, ct)
@@ -215,7 +213,7 @@ namespace Walacor_SDK.Services.Impl
             if (!wireResult.IsSuccess || wireResult.Value is null)
             {
                 return Result<string>.Fail(
-                    wireResult.Error ?? Error.Unknown("Download failed."),
+                    wireResult.Error ?? Error.Unknown(ErrorMessages.DownloadFailed),
                     wireResult.StatusCode,
                     wireResult.CorrelationId,
                     wireResult.DurationMs);
@@ -234,7 +232,7 @@ namespace Walacor_SDK.Services.Impl
                 using (stream)
                 using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
-                    await stream.CopyToAsync(fs, 81920, ct).ConfigureAwait(false);
+                    await stream.CopyToAsync(fs, FileConstants.DefaultCopyBufferSize, ct).ConfigureAwait(false);
                 }
 
                 return Result<string>.Success(
@@ -248,32 +246,39 @@ namespace Walacor_SDK.Services.Impl
                 stream.Dispose();
 
                 return Result<string>.Fail(
-                    Error.Unknown("Failed to write file to disk."),
+                    Error.Unknown(ErrorMessages.FailedToWriteFile),
                     wireResult.StatusCode,
                     wireResult.CorrelationId,
                     wireResult.DurationMs);
             }
         }
 
-        public async Task<Result<IReadOnlyList<FileMetadata>>> ListFilesAsync(string? uid = null, int pageSize = 0, int pageNo = 0, bool fromSummary = true, bool totalReq = true, CancellationToken ct = default)
+        public async Task<Result<IReadOnlyList<FileMetadata>>> ListFilesAsync(
+            string? uid = null,
+            int pageSize = 0,
+            int pageNo = 0,
+            bool fromSummary = true,
+            bool totalReq = true,
+            CancellationToken ct = default)
         {
-            var path = "query/get";
+            var path = ApiRoutes.QueryGet;
 
             var query = new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                ["fromSummary"] = fromSummary.ToString().ToLowerInvariant(),
-                ["totalReq"] = totalReq.ToString().ToLowerInvariant(),
-                ["pageSize"] = pageSize.ToString(CultureInfo.InvariantCulture),
-                ["pageNo"] = pageNo.ToString(CultureInfo.InvariantCulture),
+                [QueryParamNames.FromSummary] = fromSummary.ToString().ToLowerInvariant(),
+                [QueryParamNames.TotalReq] = totalReq.ToString().ToLowerInvariant(),
+                [QueryParamNames.PageSize] = pageSize.ToString(CultureInfo.InvariantCulture),
+                [QueryParamNames.PageNo] = pageNo.ToString(CultureInfo.InvariantCulture),
             };
 
             object payload = string.IsNullOrWhiteSpace(uid)
                 ? new { }
-                : new { UID = uid };
+                : new Dictionary<string, string>(StringComparer.Ordinal) { [JsonFieldNames.UID] = uid ?? string.Empty };
 
             var headers = new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                ["ETId"] = "17",
+                // Keeping your current behavior; if you want this constant too, we can add it.
+                [HeaderNames.ETId] = "17",
             };
 
             var wireResult = await this._ctx.Transport
@@ -288,15 +293,13 @@ namespace Walacor_SDK.Services.Impl
             if (!wireResult.IsSuccess || wireResult.Value is null)
             {
                 return Result<IReadOnlyList<FileMetadata>>.Fail(
-                    wireResult.Error ?? Error.Unknown("List files failed."),
+                    wireResult.Error ?? Error.Unknown(ErrorMessages.ListFilesFailed),
                     wireResult.StatusCode,
                     wireResult.CorrelationId,
                     wireResult.DurationMs);
             }
 
-            var list = wireResult.Value;
-
-            var ro = list.ToList().AsReadOnly();
+            var ro = wireResult.Value.ToList().AsReadOnly();
 
             return Result<IReadOnlyList<FileMetadata>>.Success(
                 ro,

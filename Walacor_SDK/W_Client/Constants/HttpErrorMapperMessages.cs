@@ -14,10 +14,14 @@
 
 namespace Walacor_SDK.W_Client.Constants
 {
-    internal static class MediaTypeNames
+    internal static class HttpErrorMapperMessages
     {
-        public const string ApplicationJson = "application/json";
-        public const string ApplicationOctetStream = "application/octet-stream";
-        public const string BearerPrefix = "Bearer ";
+        public const string RequestInvalid = "The request was invalid.";
+        public const string TooManyRequests = "Too many requests.";
+        public const string OperationFailed = "Operation failed.";
+        public const string DuplicateFileDetected = "Duplicate file detected.";
+
+        public const string ServerErrorWithStatusCodeFormat = "Server error ({0}).";
+        public const string UnknownHttpWithBodyFormat = "HTTP {0}. {1}";
     }
 }

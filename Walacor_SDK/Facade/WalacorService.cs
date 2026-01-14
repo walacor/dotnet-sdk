@@ -11,12 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 using System;
 using Walacor_SDK.Client;
 using Walacor_SDK.Services.Abs;
 using Walacor_SDK.Services.Impl;
 using Walacor_SDK.W_Client.Auth;
+using Walacor_SDK.W_Client.Constants;
 using Walacor_SDK.W_Client.Context;
 using Walacor_SDK.W_Client.Factory;
 using Walacor_SDK.W_Client.Helpers;
@@ -48,7 +48,7 @@ namespace Walacor_SDK
             }
 
             var normalizedBase = UriHelper.NormalizeBaseUri(baseUri);
-            var apiBase = UriHelper.BuildApiBaseUri(normalizedBase, "api/");
+            var apiBase = UriHelper.BuildApiBaseUri(normalizedBase, ApiSegments.ApiBase);
 
             var tokenProvider = new UsernamePasswordTokenProvider(normalizedBase, userName, password, options);
             var transport = new WalacorHttpClient(apiBase, tokenProvider, options);
@@ -65,11 +65,11 @@ namespace Walacor_SDK
             this._factory = new ServiceFactory(this._context);
         }
 
-        public ISchemaService SchemaService => this._factory.Get(ctx => new SchemaService(ctx, "schemas"));
+        public ISchemaService SchemaService => this._factory.Get(ctx => new SchemaService(ctx, ApiSegments.Schemas));
 
-        public IDataRequestsService DataRequestsService => this._factory.Get(ctx => new DataRequestsService(ctx, "envelopes"));
+        public IDataRequestsService DataRequestsService => this._factory.Get(ctx => new DataRequestsService(ctx, ApiSegments.Envelopes));
 
-        public IFileRequestsService FileRequestsService => this._factory.Get(ctx => new FileRequestsService(ctx, "v2/files"));
+        public IFileRequestsService FileRequestsService => this._factory.Get(ctx => new FileRequestsService(ctx, ApiSegments.FilesV2));
 
         public void Dispose()
         {

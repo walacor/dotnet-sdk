@@ -16,6 +16,7 @@ using System;
 using System.IO;
 using Walacor_SDK.Models.Result;
 using Walacor_SDK.Models.Results;
+using Walacor_SDK.W_Client.Constants;
 
 namespace Walacor_SDK.W_Client.Helpers
 {
@@ -45,7 +46,7 @@ namespace Walacor_SDK.W_Client.Helpers
             catch
             {
                 return Result<string>.Fail(
-                    Error.Validation("invalid_path", "The target download path is invalid."),
+                    Error.Validation(ErrorCodes.InvalidPath, ErrorMessages.TargetDownloadPathInvalid),
                     null,
                     null,
                     null);
@@ -78,7 +79,10 @@ namespace Walacor_SDK.W_Client.Helpers
             catch
             {
                 return Result<string>.Fail(
-                    Error.Validation("invalid_path", "The target download path is invalid."), null, null, null);
+                    Error.Validation(ErrorCodes.InvalidPath, ErrorMessages.TargetDownloadPathInvalid),
+                    null,
+                    null,
+                    null);
             }
         }
 
@@ -101,8 +105,8 @@ namespace Walacor_SDK.W_Client.Helpers
                 home = Directory.GetCurrentDirectory();
             }
 
-            var downloads = Path.Combine(home, "Downloads");
-            var walacor = Path.Combine(downloads, "Walacor");
+            var downloads = Path.Combine(home, FileSystemNames.DownloadsDirectoryName);
+            var walacor = Path.Combine(downloads, FileSystemNames.WalacorDirectoryName);
             return walacor;
         }
 
@@ -110,7 +114,7 @@ namespace Walacor_SDK.W_Client.Helpers
         {
             foreach (var c in Path.GetInvalidFileNameChars())
             {
-                name = name.Replace(c, '_');
+                name = name.Replace(c, FileSystemNames.InvalidFileNameReplacementChar);
             }
 
             return name;

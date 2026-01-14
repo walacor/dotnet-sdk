@@ -20,23 +20,27 @@ using System.Threading;
 using System.Threading.Tasks;
 using Walacor_SDK.Client.Extensions;
 using Walacor_SDK.W_Client.Abstractions;
-using Walacor_SDK.W_Client.Constants;
 
 namespace Walacor_SDK.Client.Pipeline
 {
-    internal sealed class AuthHandler(IAuthTokenProvider tokens, HttpMessageHandler inner)
-        : DelegatingHandler(inner)
+    internal sealed class AuthHandler : DelegatingHandler
     {
-        private readonly IAuthTokenProvider _tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
+        private const string BearerScheme = "Bearer";
+        private const string BearerPrefix = "Bearer ";
+
+        private readonly IAuthTokenProvider _tokens;
         private readonly SemaphoreSlim _refreshLock = new SemaphoreSlim(1, 1);
+
+        public AuthHandler(IAuthTokenProvider tokens, HttpMessageHandler inner)
+            : base(inner)
+        {
+            this._tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
+        }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
         {
             var token = await this._tokens.GetTokenAsync(ct).ConfigureAwait(false);
-            if (!string.IsNullOrEmpty(token))
-            {
-                request.Headers.Authorization = new AuthenticationHeaderValue(MediaTypeNames.BearerPrefix, token);
-            }
+            TryApplyBearer(request, token);
 
             var response = await base.SendAsync(request, ct).ConfigureAwait(false);
             if (response.StatusCode != HttpStatusCode.Unauthorized)
@@ -57,13 +61,41 @@ namespace Walacor_SDK.Client.Pipeline
             }
 
             var retry = await request.CloneAsync().ConfigureAwait(false);
-            if (!string.IsNullOrEmpty(token))
-            {
-                retry.Headers.Authorization = new AuthenticationHeaderValue(MediaTypeNames.BearerPrefix, token);
-            }
+            TryApplyBearer(retry, token);
 
             var second = await base.SendAsync(retry, ct).ConfigureAwait(false);
             return second;
+        }
+
+        private static void TryApplyBearer(HttpRequestMessage request, string? token)
+        {
+            var normalized = NormalizeBearerToken(token);
+            if (string.IsNullOrEmpty(normalized))
+            {
+                // If token is invalid/empty, don't set Authorization at all.
+                request.Headers.Authorization = null;
+                return;
+            }
+
+            request.Headers.Authorization = new AuthenticationHeaderValue(BearerScheme, normalized);
+        }
+
+        private static string? NormalizeBearerToken(string? token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return null;
+            }
+
+            var t = token!.Trim();
+
+            // Some providers return "Bearer <token>" already.
+            if (t.StartsWith(BearerPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                t = t.Substring(BearerPrefix.Length).Trim();
+            }
+
+            return string.IsNullOrEmpty(t) ? null : t;
         }
     }
 }

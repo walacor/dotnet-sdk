@@ -12,16 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+using Newtonsoft.Json;
 
-namespace Walacor_SDK.W_Client.Options
+namespace Walacor_SDK.Models.FileRequests.Response
 {
-    public sealed class WalacorHttpClientOptions
+    public sealed class FileInfo
     {
-        public int MaxRetries { get; set; } = 2;
+        [JsonProperty("file")]
+        public VerifyFile File { get; set; } = new VerifyFile();
 
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(2);
+        [JsonProperty("fileSignature")]
+        public string FileSignature { get; set; } = string.Empty;
 
-        public bool ThrowOnValidation422 { get; set; } = true;
+        [JsonProperty("fileHash")]
+        public string FileHash { get; set; } = string.Empty;
+
+        [JsonProperty("totalEncryptedChunkFile")]
+        public int TotalEncryptedChunkFile { get; set; }
     }
 }

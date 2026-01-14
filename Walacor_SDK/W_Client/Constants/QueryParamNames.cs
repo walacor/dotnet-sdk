@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
-namespace Walacor_SDK.W_Client.Options
+namespace Walacor_SDK.W_Client.Constants
 {
-    public sealed class WalacorHttpClientOptions
+    internal static class QueryParamNames
     {
-        public int MaxRetries { get; set; } = 2;
-
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(2);
-
-        public bool ThrowOnValidation422 { get; set; } = true;
+        public const string PageNo = "pageNo";
+        public const string PageSize = "pageSize";
+        public const string FromSummary = "fromSummary";
+        public const string TotalReq = "totalReq";
+        public const string TableName = "tableName";
     }
 }

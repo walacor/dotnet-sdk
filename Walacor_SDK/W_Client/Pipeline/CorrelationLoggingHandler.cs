@@ -17,16 +17,15 @@ using System.Diagnostics;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Walacor_SDK.W_Client.Constants;
 
 namespace Walacor_SDK.Client.Pipeline
 {
     internal sealed class CorrelationLoggingHandler(HttpMessageHandler innerHandler) : DelegatingHandler(innerHandler)
     {
-        public const string CorrelationHeader = "X-Request-ID";
-
-        public const string CorrelationKey = "Walacor.CorrelationId";
-
-        public const string DurationKey = "Walacor.Duration";
+        public const string CorrelationHeader = CorrelationConstants.CorrelationHeader;
+        public const string CorrelationKey = CorrelationConstants.CorrelationKey;
+        public const string DurationKey = CorrelationConstants.DurationKey;
 
         protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
@@ -34,18 +33,20 @@ namespace Walacor_SDK.Client.Pipeline
         {
             // reuse correlation id if already present; or create new one
             string correlationId;
-            if (!request.Headers.TryGetValues(CorrelationHeader, out var values))
+            if (!request.Headers.TryGetValues(CorrelationConstants.CorrelationHeader, out var values))
             {
-                correlationId = Guid.NewGuid().ToString("N");
-                request.Headers.Add(CorrelationHeader, correlationId);
+                correlationId = Guid.NewGuid().ToString(CorrelationConstants.GuidFormatCompact);
+                request.Headers.Add(CorrelationConstants.CorrelationHeader, correlationId);
             }
             else
             {
                 using var e = values.GetEnumerator();
-                correlationId = (e.MoveNext() ? e.Current : Guid.NewGuid().ToString("N"))!;
+                correlationId = (e.MoveNext()
+                    ? e.Current
+                    : Guid.NewGuid().ToString(CorrelationConstants.GuidFormatCompact))!;
             }
 
-            request.Properties[CorrelationKey] = correlationId;
+            request.Properties[CorrelationConstants.CorrelationKey] = correlationId;
 
             var sw = Stopwatch.StartNew();
             try
@@ -53,9 +54,9 @@ namespace Walacor_SDK.Client.Pipeline
                 var response = await base.SendAsync(request, ct).ConfigureAwait(false);
                 sw.Stop();
 
-                response.Headers.TryAddWithoutValidation(CorrelationHeader, correlationId);
-                response.RequestMessage!.Properties[DurationKey] = sw.ElapsedMilliseconds;
-                response.RequestMessage!.Properties[CorrelationKey] = correlationId;
+                response.Headers.TryAddWithoutValidation(CorrelationConstants.CorrelationHeader, correlationId);
+                response.RequestMessage!.Properties[CorrelationConstants.DurationKey] = sw.ElapsedMilliseconds;
+                response.RequestMessage!.Properties[CorrelationConstants.CorrelationKey] = correlationId;
 
                 return response;
             }
@@ -64,8 +65,8 @@ namespace Walacor_SDK.Client.Pipeline
                 sw.Stop();
 
                 // Attach correlation for upstream mappers
-                ex.Data[CorrelationKey] = correlationId;
-                ex.Data[DurationKey] = sw.ElapsedMilliseconds;
+                ex.Data[CorrelationConstants.CorrelationKey] = correlationId;
+                ex.Data[CorrelationConstants.DurationKey] = sw.ElapsedMilliseconds;
                 throw;
             }
         }

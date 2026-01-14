@@ -12,16 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
-namespace Walacor_SDK.W_Client.Options
+namespace Walacor_SDK.W_Client.Constants
 {
-    public sealed class WalacorHttpClientOptions
+    internal static class ErrorCodes
     {
-        public int MaxRetries { get; set; } = 2;
+        public const string FileNotFound = "file_not_found";
+        public const string FileNotReady = "file_not_ready";
+        public const string InvalidPath = "invalid_path";
 
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(2);
+        public const string RecordsEmpty = "records_empty";
+        public const string UidMissing = "uid_missing";
 
-        public bool ThrowOnValidation422 { get; set; } = true;
+        public const string ValidationFailed = "validation_failed";
+        public const string BadRequest = "bad_request";
+
+        public const string DuplicateFile = "duplicate_file";
     }
 }

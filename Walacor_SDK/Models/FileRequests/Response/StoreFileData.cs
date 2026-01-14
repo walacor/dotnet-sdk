@@ -12,16 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 
-namespace Walacor_SDK.W_Client.Options
+namespace Walacor_SDK.Models.FileRequests.Response
 {
-    public sealed class WalacorHttpClientOptions
+    public sealed class StoreFileData
     {
-        public int MaxRetries { get; set; } = 2;
-
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(2);
-
-        public bool ThrowOnValidation422 { get; set; } = true;
+        /// <summary>
+        /// List of UIDs returned by the store operation.
+        /// </summary>
+        [JsonProperty("UID")]
+        public IList<string> UIDs { get; set; } = new List<string>();
     }
 }

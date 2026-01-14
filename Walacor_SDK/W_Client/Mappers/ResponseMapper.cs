@@ -16,17 +16,18 @@ using System;
 using Newtonsoft.Json.Linq;
 using Walacor_SDK.Models.Result;
 using Walacor_SDK.Models.Results;
+using Walacor_SDK.W_Client.Constants;
 
 namespace Walacor_SDK.W_Client.Mappers
 {
     internal static class ResponseMapper
     {
         public static Result<T> FromSuccessEnvelope<T>(
-        string json,
-        Func<string, BaseResponse<T>?> deserializeEnvelope,
-        int statusCode,
-        string? correlationId,
-        long? durationMs = null)
+            string json,
+            Func<string, BaseResponse<T>?> deserializeEnvelope,
+            int statusCode,
+            string? correlationId,
+            long? durationMs = null)
         {
             try
             {
@@ -35,7 +36,7 @@ namespace Walacor_SDK.W_Client.Mappers
                 if (env is null)
                 {
                     return Result<T>.Fail(
-                        Error.Deserialization("Invalid envelope format."),
+                        Error.Deserialization(ResponseMapperMessages.InvalidEnvelopeFormat),
                         statusCode,
                         correlationId,
                         durationMs);
@@ -46,7 +47,7 @@ namespace Walacor_SDK.W_Client.Mappers
                     if (env.Data is null)
                     {
                         return Result<T>.Fail(
-                            Error.Deserialization("Envelope is successful but 'Data' is null."),
+                            Error.Deserialization(ResponseMapperMessages.EnvelopeSuccessButDataNull),
                             statusCode,
                             correlationId,
                             durationMs);
@@ -62,7 +63,7 @@ namespace Walacor_SDK.W_Client.Mappers
             catch
             {
                 return Result<T>.Fail(
-                    Error.Deserialization("Invalid envelope format."),
+                    Error.Deserialization(ResponseMapperMessages.InvalidEnvelopeFormat),
                     statusCode,
                     correlationId,
                     durationMs);
@@ -74,68 +75,69 @@ namespace Walacor_SDK.W_Client.Mappers
             try
             {
                 var root = JToken.Parse(json);
-                var errorToken = root["error"];
+                var errorToken = root[JsonPropertyNames.Error];
+
                 if (errorToken is null || errorToken.Type == JTokenType.Null)
                 {
-                    return (Error.Server("Operation failed."), httpStatus);
+                    return (Error.Server(ResponseMapperMessages.OperationFailed), httpStatus);
                 }
 
                 return CreateErrorFromEnvelopeToken(errorToken, httpStatus);
             }
             catch
             {
-                return (Error.Server("Operation failed."), httpStatus);
+                return (Error.Server(ResponseMapperMessages.OperationFailed), httpStatus);
             }
         }
 
         private static (Error Error, int? StatusCode) CreateErrorFromEnvelopeToken(JToken errorToken, int httpStatus)
         {
-            var code = errorToken["code"]?.Value<int?>();
-            var errorsArray = errorToken["errors"] as JArray;
+            var code = errorToken[JsonPropertyNames.Code]?.Value<int?>();
+            var errorsArray = errorToken[JsonPropertyNames.Errors] as JArray;
 
             string? reason = null;
             string? message = null;
 
             if (errorsArray is not null && errorsArray.Count > 0 && errorsArray[0] is JObject first)
             {
-                reason = first["reason"]?.Value<string>();
-                message = first["message"]?.Value<string>();
+                reason = first[JsonPropertyNames.Reason]?.Value<string>();
+                message = first[JsonPropertyNames.Message]?.Value<string>();
             }
 
             if (string.IsNullOrWhiteSpace(message))
             {
-                message = "Operation failed.";
+                message = ResponseMapperMessages.OperationFailed;
             }
 
             var effectiveStatus = code ?? httpStatus;
 
             Error err = effectiveStatus switch
             {
-                400 => Error.Validation(reason ?? "bad_request", message!),
-                401 => Error.Unauthorized(message!),
-                404 => Error.NotFound(message!),
-                >= 500 and < 600 => Error.Server(message!),
+                HttpStatusCodes.BadRequest => Error.Validation(reason ?? ErrorCodes.BadRequest, message!),
+                HttpStatusCodes.Unauthorized => Error.Unauthorized(message!),
+                HttpStatusCodes.NotFound => Error.NotFound(message!),
+                >= HttpStatusRanges.ServerErrorMinInclusive and < HttpStatusRanges.ServerErrorMaxExclusive => Error.Server(message!),
                 _ => Error.Unknown(message!),
             };
 
             if (!string.IsNullOrEmpty(reason))
             {
-                err.Details["reason"] = reason;
+                err.Details[ErrorDetailKeys.Reason] = reason;
             }
 
             if (errorsArray is not null)
             {
-                err.Details["errors"] = errorsArray.ToObject<object?[]?>();
+                err.Details[ErrorDetailKeys.Errors] = errorsArray.ToObject<object?[]?>();
             }
 
             if (code.HasValue)
             {
-                err.Details["code"] = code.Value;
+                err.Details[ErrorDetailKeys.Code] = code.Value;
             }
 
             if (code.HasValue && code.Value != httpStatus)
             {
-                err.Details["httpStatus"] = httpStatus;
+                err.Details[ErrorDetailKeys.HttpStatus] = httpStatus;
             }
 
             return (err, effectiveStatus);

@@ -12,16 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
-namespace Walacor_SDK.W_Client.Options
+namespace Walacor_SDK.W_Client.Constants
 {
-    public sealed class WalacorHttpClientOptions
+    internal static class CorrelationConstants
     {
-        public int MaxRetries { get; set; } = 2;
+        public const string CorrelationHeader = "X-Request-ID";
 
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(2);
+        public const string CorrelationKey = "Walacor.CorrelationId";
+        public const string DurationKey = "Walacor.Duration";
 
-        public bool ThrowOnValidation422 { get; set; } = true;
+        public const string GuidFormatCompact = "N";
     }
 }

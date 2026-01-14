@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
-namespace Walacor_SDK.W_Client.Options
+namespace Walacor_SDK.W_Client.Constants
 {
-    public sealed class WalacorHttpClientOptions
+    internal static class HttpErrorMapperMessages
     {
-        public int MaxRetries { get; set; } = 2;
+        public const string RequestInvalid = "The request was invalid.";
+        public const string TooManyRequests = "Too many requests.";
+        public const string OperationFailed = "Operation failed.";
+        public const string DuplicateFileDetected = "Duplicate file detected.";
 
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(2);
-
-        public bool ThrowOnValidation422 { get; set; } = true;
+        public const string ServerErrorWithStatusCodeFormat = "Server error ({0}).";
+        public const string UnknownHttpWithBodyFormat = "HTTP {0}. {1}";
     }
 }

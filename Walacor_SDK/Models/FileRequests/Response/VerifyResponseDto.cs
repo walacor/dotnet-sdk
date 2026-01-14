@@ -12,16 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+using Newtonsoft.Json;
 
-namespace Walacor_SDK.W_Client.Options
+namespace Walacor_SDK.Models.FileRequests.Response
 {
-    public sealed class WalacorHttpClientOptions
+    public sealed class VerifyResponseDto
     {
-        public int MaxRetries { get; set; } = 2;
-
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(2);
-
-        public bool ThrowOnValidation422 { get; set; } = true;
+        [JsonProperty("fileInfo")]
+        public FileInfo FileInfo { get; set; } = new FileInfo();
     }
 }

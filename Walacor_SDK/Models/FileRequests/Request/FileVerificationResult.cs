@@ -12,16 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+using Walacor_SDK.Models.FileRequests.Response;
 
-namespace Walacor_SDK.W_Client.Options
+namespace Walacor_SDK.Models.FileRequests.Request
 {
-    public sealed class WalacorHttpClientOptions
+    public sealed class FileVerificationResult
     {
-        public int MaxRetries { get; set; } = 2;
+        public bool IsDuplicate => this.DuplicateData is not null;
 
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(2);
+        public FileInfo? FileInfo { get; set; }
 
-        public bool ThrowOnValidation422 { get; set; } = true;
+        public DuplicateData? DuplicateData { get; set; }
+
+        public static FileVerificationResult FromFileInfo(FileInfo info)
+            => new FileVerificationResult { FileInfo = info };
+
+        public static FileVerificationResult FromDuplicate(DuplicateData dup)
+            => new FileVerificationResult { DuplicateData = dup };
     }
 }

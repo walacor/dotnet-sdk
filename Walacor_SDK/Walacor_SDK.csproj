@@ -13,15 +13,16 @@
 
 
 	  <!-- NuGet metadata -->
-    <PackageId>Test</PackageId>
-    <Authors>Test</Authors>
-    <Company>Test</Company>
-    <Description>Test</Description>
-    <PackageTags>Test</PackageTags>
-    <RepositoryUrl>https://github.com/walacor/dotnet-sdk/</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+	  <PackageId>Walacor.DotNetSdk</PackageId>
+	  <Authors>Walacor</Authors>
+	  <Company>Walacor Corporation</Company>
+	  <Description>Official .NET SDK for the Walacor Platform API. Includes WalacorService plus schema, file-request, and data-request clients with an HTTP pipeline (auth, retry, correlation logging) and download/query helpers. Targets .NET Standard 2.0.</Description>
+	  <PackageTags>walacor;sdk;dotnet;netstandard;api;client;schemas;files;data;http;auth;retry</PackageTags>
+
+	  <RepositoryUrl>https://github.com/walacor/dotnet-sdk</RepositoryUrl>
+	  <RepositoryType>git</RepositoryType>
+	  <PublishRepositoryUrl>true</PublishRepositoryUrl>
+	  <PackageReadmeFile>README.md</PackageReadmeFile>
     <!-- Choose ONE of these license options -->
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <!-- or: <PackageLicenseFile>LICENSE</PackageLicenseFile> -->

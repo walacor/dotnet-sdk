@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Walacor_SDK.Enums;
@@ -22,6 +22,7 @@ using Walacor_SDK.Models.Results;
 using Walacor_SDK.Models.Schema.Request;
 using Walacor_SDK.Models.Schema.Response;
 using Walacor_SDK.Services.Abs;
+using Walacor_SDK.W_Client.Constants;
 using Walacor_SDK.W_Client.Context;
 using Walacor_SDK.W_Client.Helpers;
 
@@ -32,15 +33,15 @@ namespace Walacor_SDK.Services.Impl
         private readonly ClientContext _ctx;
         private readonly string _segment;
 
-        public SchemaService(ClientContext ctx, string segment = "schemas")
+        public SchemaService(ClientContext ctx, string segment = ApiSegments.Schemas)
         {
             this._ctx = ctx ?? throw new ArgumentNullException(nameof(ctx));
-            this._segment = string.IsNullOrWhiteSpace(segment) ? "schemas" : segment.Trim('/');
+            this._segment = string.IsNullOrWhiteSpace(segment) ? ApiSegments.Schemas : segment.Trim('/');
         }
 
         public async Task<Result<IReadOnlyList<DataTypeDto>>> GetDataTypesAsync(CancellationToken ct = default)
         {
-            var path = $"{this._segment}/dataTypes";
+            var path = $"{this._segment}/{ApiRoutes.DataTypes}";
 
             var res = await this._ctx.Transport
                 .GetJsonAsync<List<DataTypeDto>>(path, query: null, ct)
@@ -50,9 +51,9 @@ namespace Walacor_SDK.Services.Impl
         }
 
         public async Task<Result<IReadOnlyDictionary<string, AutoGenFieldDto>>> GetPlatformAutoGenerationFieldsAsync(
-         CancellationToken ct = default)
+            CancellationToken ct = default)
         {
-            var path = $"{this._segment}/systemFields";
+            var path = $"{this._segment}/{ApiRoutes.SystemFields}";
 
             var res = await this._ctx.Transport
                 .GetJsonAsync<Dictionary<string, AutoGenFieldDto>>(path, query: null, ct)
@@ -64,7 +65,7 @@ namespace Walacor_SDK.Services.Impl
 
         public async Task<Result<IReadOnlyList<SchemaEntryDto>>> GetListWithLatestVersionAsync(CancellationToken ct = default)
         {
-            var path = $"{this._segment}/versions/latest";
+            var path = $"{this._segment}/{ApiRoutes.VersionsLatest}";
 
             var res = await this._ctx.Transport
                 .GetJsonAsync<List<SchemaEntryDto>>(path, query: null, ct)
@@ -75,7 +76,7 @@ namespace Walacor_SDK.Services.Impl
 
         public async Task<Result<IReadOnlyList<SchemaVersionEntryDto>>> GetVersionsAsync(CancellationToken ct = default)
         {
-            var path = $"{this._segment}/versions";
+            var path = $"{this._segment}/{ApiRoutes.Versions}";
 
             var res = await this._ctx.Transport
                 .GetJsonAsync<List<SchemaVersionEntryDto>>(path, query: null, ct)
@@ -86,36 +87,38 @@ namespace Walacor_SDK.Services.Impl
 
         public async Task<Result<IReadOnlyList<int>>> GetVersionsForEnvelopeTypeAsync(int etId, CancellationToken ct = default)
         {
-            var path = $"{this._segment}/envelopeTypes/{etId}/versions";
+            var path = $"{this._segment}/{ApiRoutes.EnvelopeTypes}/{etId}/{ApiRoutes.Versions}";
+
             var res = await this._ctx.Transport
-               .GetJsonAsync<List<int>>(path, query: null, ct)
-               .ConfigureAwait(false);
+                .GetJsonAsync<List<int>>(path, query: null, ct)
+                .ConfigureAwait(false);
 
             return res.Map(list => (IReadOnlyList<int>)list.AsReadOnly());
         }
 
         public async Task<Result<IReadOnlyList<IndexEntryDto>>> GetIndexesAsync(int etId, CancellationToken ct = default)
         {
-            var path = $"{this._segment}/envelopeTypes/{etId}/indexes";
+            var path = $"{this._segment}/{ApiRoutes.EnvelopeTypes}/{etId}/{ApiRoutes.Indexes}";
+
             var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                ["ETId"] = etId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                [HeaderNames.ETId] = etId.ToString(CultureInfo.InvariantCulture),
             };
 
             var res = await this._ctx.Transport
-               .GetJsonWithHeadersAsync<List<IndexEntryDto>>(path, query: null, headers, ct)
-               .ConfigureAwait(false);
+                .GetJsonWithHeadersAsync<List<IndexEntryDto>>(path, query: null, headers, ct)
+                .ConfigureAwait(false);
 
             return res.Map(list => (IReadOnlyList<IndexEntryDto>)list.AsReadOnly());
         }
 
         public async Task<Result<IReadOnlyList<IndexEntryDto>>> GetIndexesAsync(SystemEnvelopeType etId, CancellationToken ct = default)
         {
-            var path = $"{this._segment}/envelopeTypes/{etId}/indexes";
+            var path = $"{this._segment}/{ApiRoutes.EnvelopeTypes}/{etId}/{ApiRoutes.Indexes}";
 
             var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                ["ETId"] = EnumHelper.EtIdToString(etId),
+                [HeaderNames.ETId] = EnumHelper.EtIdToString(etId),
             };
 
             var response = await this._ctx.Transport
@@ -127,16 +130,16 @@ namespace Walacor_SDK.Services.Impl
 
         public async Task<Result<IReadOnlyList<IndexEntryDto>>> GetIndexesByTableNameAsync(string tableName, CancellationToken ct = default)
         {
-            var path = $"{this._segment}/envelopeTypes/{15}/indexesByTableName";
+            var path = $"{this._segment}/{ApiRoutes.EnvelopeTypes}/{SystemDefaults.SchemaEnvelopeTypeId}/{ApiRoutes.IndexesByTableName}";
 
             var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                ["ETId"] = "15",
+                [HeaderNames.ETId] = SystemDefaults.SchemaEnvelopeTypeId.ToString(CultureInfo.InvariantCulture),
             };
 
             var query = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                ["tableName"] = tableName,
+                [QueryParamNames.TableName] = tableName,
             };
 
             var response = await this._ctx.Transport
@@ -157,8 +160,8 @@ namespace Walacor_SDK.Services.Impl
 
             var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                ["ETId"] = "15",
-                ["SV"] = "1",
+                [HeaderNames.ETId] = SystemDefaults.SchemaEnvelopeTypeId.ToString(CultureInfo.InvariantCulture),
+                [HeaderNames.SV] = SystemDefaults.DefaultSchemaVersion.ToString(CultureInfo.InvariantCulture),
             };
 
             var res = await this._ctx.Transport
@@ -175,11 +178,11 @@ namespace Walacor_SDK.Services.Impl
 
         public async Task<Result<SchemaDetailDto>> GetSchemaDetailsByEnvelopeTypeAsync(int etId, CancellationToken ct = default)
         {
-            var path = $"{this._segment}/envelopeTypes/{etId}/details";
+            var path = $"{this._segment}/{ApiRoutes.EnvelopeTypes}/{etId}/{ApiRoutes.Details}";
 
             var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                ["ETid"] = etId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                [HeaderNames.ETidTypo] = etId.ToString(CultureInfo.InvariantCulture),
             };
 
             var response = await this._ctx.Transport
@@ -191,7 +194,7 @@ namespace Walacor_SDK.Services.Impl
 
         public async Task<Result<IReadOnlyList<long>>> GetEnvelopeTypesAsync(CancellationToken ct = default)
         {
-            var path = $"{this._segment}/envelopeTypes";
+            var path = $"{this._segment}/{ApiRoutes.EnvelopeTypes}";
 
             var res = await this._ctx.Transport
                 .GetJsonAsync<List<long>>(path, query: null, ct)
@@ -216,8 +219,8 @@ namespace Walacor_SDK.Services.Impl
             var path = $"{this._segment}";
 
             var res = await this._ctx.Transport
-                 .GetJsonAsync<List<SchemaItemDto>>(path, query: null, ct)
-                 .ConfigureAwait(false);
+                .GetJsonAsync<List<SchemaItemDto>>(path, query: null, ct)
+                .ConfigureAwait(false);
 
             return res.Map(list => (IReadOnlyList<SchemaItemDto>)list.AsReadOnly());
         }
@@ -226,7 +229,7 @@ namespace Walacor_SDK.Services.Impl
             SchemaQueryListRequest request,
             CancellationToken ct = default)
         {
-            var path = $"{this._segment}/schemaList";
+            var path = $"{this._segment}/{ApiRoutes.SchemaList}";
 
             var query = QueryHelper.BuildQueryFromObject(request);
 

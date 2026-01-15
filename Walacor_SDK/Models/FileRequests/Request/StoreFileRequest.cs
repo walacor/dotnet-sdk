@@ -13,15 +13,18 @@
 // limitations under the License.
 
 using System;
+using Walacor_SDK.Models.FileRequests.Response;
 
-namespace Walacor_SDK.W_Client.Options
+namespace Walacor_SDK.Models.FileRequests.Request
 {
-    public sealed class WalacorHttpClientOptions
+    public sealed class StoreFileRequest
     {
-        public int MaxRetries { get; set; } = 2;
+        public StoreFileRequest(FileInfo fileInfo)
+        {
+            this.FileInfo = fileInfo ?? throw new ArgumentNullException(nameof(fileInfo));
+        }
 
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(2);
-
-        public bool ThrowOnValidation422 { get; set; } = true;
+        [Newtonsoft.Json.JsonProperty("fileInfo")]
+        public FileInfo FileInfo { get; }
     }
 }

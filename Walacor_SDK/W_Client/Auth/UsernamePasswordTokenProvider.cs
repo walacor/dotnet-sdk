@@ -13,13 +13,18 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Walacor_SDK.Client.Exceptions;
 using Walacor_SDK.Models.Auth;
 using Walacor_SDK.W_Client.Abstractions;
+using Walacor_SDK.W_Client.Constants;
+using Walacor_SDK.W_Client.Mappers;
+using Walacor_SDK.W_Client.Options;
 
 namespace Walacor_SDK.W_Client.Auth
 {
@@ -29,10 +34,9 @@ namespace Walacor_SDK.W_Client.Auth
         private readonly string _userName;
         private readonly string _password;
 
-        // In-memory token cache
         private string _token = string.Empty;
 
-        public UsernamePasswordTokenProvider(Uri baseAddress, string userName, string password)
+        public UsernamePasswordTokenProvider(Uri baseAddress, string userName, string password, WalacorHttpClientOptions? options = null)
         {
             if (baseAddress == null)
             {
@@ -41,12 +45,12 @@ namespace Walacor_SDK.W_Client.Auth
 
             this._userName = userName ?? throw new ArgumentNullException(nameof(userName));
             this._password = password ?? throw new ArgumentNullException(nameof(password));
+            var opts = options ?? new WalacorHttpClientOptions();
 
-            // Separate client for auth (no auth handler on itself)
             this._authClient = new HttpClient(new HttpClientHandler())
             {
                 BaseAddress = baseAddress,
-                Timeout = TimeSpan.FromSeconds(30),
+                Timeout = opts.Timeout,
             };
         }
 
@@ -62,22 +66,35 @@ namespace Walacor_SDK.W_Client.Auth
 
         public async Task<string> RefreshTokenAsync(CancellationToken ct = default)
         {
-            var bodyObj = new { userName = this._userName, password = this._password };
-            var content = new StringContent(JsonConvert.SerializeObject(bodyObj), Encoding.UTF8, "application/json");
-
-            using var res = await this._authClient.PostAsync("/api/auth/login", content, ct).ConfigureAwait(false);
-            res.EnsureSuccessStatusCode();
-
-            var json = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-            var dto = JsonConvert.DeserializeObject<LoginDto>(json);
-            if (dto == null || string.IsNullOrEmpty(dto.ApiToken))
+            var bodyObj = new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                throw new InvalidOperationException("Authentication succeeded but no token was returned.");
+                [JsonFieldNames.UserName] = this._userName,
+                [JsonFieldNames.Password] = this._password,
+            };
+
+            var content = new StringContent(
+                JsonConvert.SerializeObject(bodyObj),
+                Encoding.UTF8,
+                MediaTypeNames.ApplicationJson);
+
+            using var res = await this._authClient.PostAsync(AuthRoutes.Login, content, ct).ConfigureAwait(false);
+            var body = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+            if (!res.IsSuccessStatusCode)
+            {
+                var status = (int)res.StatusCode;
+                var err = HttpErrorMapper.FromStatus(status, body);
+                throw new WalacorRequestException(err.Message, res.StatusCode, body);
             }
 
-            this._token = dto.ApiToken.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
-                ? dto.ApiToken.Substring("Bearer ".Length)
+            var dto = JsonConvert.DeserializeObject<LoginDto>(body);
+            if (dto == null || string.IsNullOrEmpty(dto.ApiToken))
+            {
+                throw new InvalidOperationException(ErrorMessages.AuthSucceededNoToken);
+            }
+
+            this._token = dto.ApiToken.StartsWith(MediaTypeNames.BearerPrefix, StringComparison.OrdinalIgnoreCase)
+                ? dto.ApiToken.Substring(MediaTypeNames.BearerPrefix.Length)
                 : dto.ApiToken;
 
             return this._token;

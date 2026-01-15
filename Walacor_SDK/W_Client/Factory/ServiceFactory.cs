@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using Walacor_SDK.W_Client.Constants;
 using Walacor_SDK.W_Client.Context;
 
 namespace Walacor_SDK.W_Client.Factory
@@ -45,7 +46,10 @@ namespace Walacor_SDK.W_Client.Factory
                         var instance = factory(this._context);
                         if (instance is null)
                         {
-                            throw new InvalidOperationException($"Factory returned null for {typeof(TService).Name}.");
+                            throw new InvalidOperationException(
+                                string.Format(
+                                    ExceptionMessages.FactoryReturnedNullForService,
+                                    typeof(TService).Name));
                         }
 
                         return instance;

@@ -12,16 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 
-namespace Walacor_SDK.W_Client.Options
+namespace Walacor_SDK.Models.FileRequests.Response
 {
-    public sealed class WalacorHttpClientOptions
+    public sealed class DuplicateData
     {
-        public int MaxRetries { get; set; } = 2;
+        public string EId { get; set; } = string.Empty;
 
-        public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(2);
+        [JsonProperty("UID")]
+        public IList<string> UIDs { get; set; } = new List<string>();
 
-        public bool ThrowOnValidation422 { get; set; } = true;
+        public string DH { get; set; } = string.Empty;
+
+        public long CreatedAt { get; set; }
+
+        public string Signature { get; set; } = string.Empty;
+
+        public string SignatureType { get; set; } = string.Empty;
     }
 }

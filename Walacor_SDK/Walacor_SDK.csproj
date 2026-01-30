@@ -44,7 +44,10 @@
     <None Include="LICENSE" Pack="true" PackagePath="/" Condition="Exists('LICENSE')" />
     <None Include="icon.png" Pack="true" PackagePath="/" Condition="Exists('icon.png')" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-
+	<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+	<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+	<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
+	  
     <!-- Analyzers (optional but good) --> <!--make sure that we need this -->
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="all" />
     <PackageReference Include="Meziantou.Analyzer" Version="2.0.158" PrivateAssets="all" />

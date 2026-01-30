@@ -31,7 +31,6 @@ namespace Walacor_SDK.Client.Pipeline
             HttpRequestMessage request,
             CancellationToken ct)
         {
-            // reuse correlation id if already present; or create new one
             string correlationId;
             if (!request.Headers.TryGetValues(CorrelationConstants.CorrelationHeader, out var values))
             {
@@ -64,7 +63,6 @@ namespace Walacor_SDK.Client.Pipeline
             {
                 sw.Stop();
 
-                // Attach correlation for upstream mappers
                 ex.Data[CorrelationConstants.CorrelationKey] = correlationId;
                 ex.Data[CorrelationConstants.DurationKey] = sw.ElapsedMilliseconds;
                 throw;

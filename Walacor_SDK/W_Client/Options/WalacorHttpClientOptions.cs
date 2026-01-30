@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Walacor_SDK.W_Client.Options
 {
@@ -23,5 +25,34 @@ namespace Walacor_SDK.W_Client.Options
         public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(2);
 
         public bool ThrowOnValidation422 { get; set; } = true;
+
+        public ILoggerFactory LoggerFactory { get; set; } = NullLoggerFactory.Instance;
+
+        public bool LogRequestHeaders { get; set; }
+
+        public bool LogResponseHeaders { get; set; }
+
+        public bool LogBodies { get; set; }
+
+        public Func<string, bool> RedactHeader { get; set; } = DefaultRedactHeader;
+
+        public LogLevel SuccessLevel { get; set; } = LogLevel.Information;
+
+        public LogLevel FailureLevel { get; set; } = LogLevel.Warning;
+
+        public LogLevel ExceptionLevel { get; set; } = LogLevel.Error;
+
+        private static bool DefaultRedactHeader(string headerName)
+        {
+            if (string.IsNullOrWhiteSpace(headerName))
+            {
+                return false;
+            }
+
+            return headerName.Equals("Authorization", StringComparison.OrdinalIgnoreCase)
+                   || headerName.Equals("Cookie", StringComparison.OrdinalIgnoreCase)
+                   || headerName.Equals("Set-Cookie", StringComparison.OrdinalIgnoreCase)
+                   || headerName.Equals("X-Api-Key", StringComparison.OrdinalIgnoreCase);
+        }
     }
 }

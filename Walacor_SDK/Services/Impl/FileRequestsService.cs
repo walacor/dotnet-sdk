@@ -21,6 +21,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Walacor_SDK.Models.FileRequests.Request;
 using Walacor_SDK.Models.FileRequests.Response;
 using Walacor_SDK.Models.Result;
@@ -37,11 +38,13 @@ namespace Walacor_SDK.Services.Impl
     {
         private readonly ClientContext _ctx;
         private readonly string _segment;
+        private readonly ILogger _logger;
 
         public FileRequestsService(ClientContext ctx, string segment = ApiSegments.FilesV2)
         {
             this._ctx = ctx ?? throw new ArgumentNullException(nameof(ctx));
             this._segment = string.IsNullOrWhiteSpace(segment) ? ApiSegments.FilesV2 : segment.Trim('/');
+            this._logger = this._ctx.Options.LoggerFactory.CreateLogger("Walacor_SDK.Service.FileReuestsService");
         }
 
         public async Task<Result<FileVerificationResult>> VerifyAsync(VerifySingleFileRequest request, CancellationToken ct = default)
@@ -263,6 +266,8 @@ namespace Walacor_SDK.Services.Impl
         {
             var path = ApiRoutes.QueryGet;
 
+            this.LogRequest(nameof(this.ListFilesAsync), path);
+
             var query = new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 [QueryParamNames.FromSummary] = fromSummary.ToString().ToLowerInvariant(),
@@ -277,7 +282,6 @@ namespace Walacor_SDK.Services.Impl
 
             var headers = new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                // Keeping your current behavior; if you want this constant too, we can add it.
                 [HeaderNames.ETId] = "17",
             };
 
@@ -306,6 +310,14 @@ namespace Walacor_SDK.Services.Impl
                 wireResult.StatusCode,
                 wireResult.CorrelationId,
                 wireResult.DurationMs);
+        }
+
+        private void LogRequest(string operation, string path)
+        {
+            this._logger.LogInformation(
+                "SchemaService {Operation} {Path}",
+                operation,
+                path);
         }
     }
 }

@@ -1,11 +1,11 @@
-// Test_Walacor_SDK/W_Client/Handlers/RetryHandlerTests.cs
+using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions;
 using Test_Walacor_SDK.W_Client.Helpers;
 using Walacor_SDK.Client.Pipeline;
 using Xunit;
@@ -31,7 +31,7 @@ namespace Test_Walacor_SDK.W_Client.Handlers
             fake.Enqueue(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(@"{""ok"":true}") });
 
             var backoff = new DeterministicBackoff();
-            var retry = new RetryHandler(backoff, maxRetries: 3, inner: fake);
+            var retry = new RetryHandler(backoff, maxRetries: 3, logger: NullLogger.Instance, inner: fake);
             var client = BuildClient(retry);
 
             var req = new HttpRequestMessage(HttpMethod.Get, "foo");
@@ -60,7 +60,7 @@ namespace Test_Walacor_SDK.W_Client.Handlers
             fake.Enqueue(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(@"{""ok"":true}") });
 
             var backoff = new DeterministicBackoff();
-            var retry = new RetryHandler(backoff, maxRetries: 3, inner: fake);
+            var retry = new RetryHandler(backoff, maxRetries: 3, logger: NullLogger.Instance, inner: fake);
             var client = BuildClient(retry);
 
             var req = new HttpRequestMessage(HttpMethod.Get, "foo");
@@ -79,7 +79,7 @@ namespace Test_Walacor_SDK.W_Client.Handlers
             var fake = new FakeHttpHandler();
             fake.Enqueue(new HttpResponseMessage((HttpStatusCode)429));
 
-            var retry = new RetryHandler(new DeterministicBackoff(), maxRetries: 3, inner: fake);
+            var retry = new RetryHandler(new DeterministicBackoff(), maxRetries: 3, logger: NullLogger.Instance, inner: fake);
             var client = BuildClient(retry);
 
             var req = new HttpRequestMessage(HttpMethod.Post, "bar") { Content = new StringContent("x") };

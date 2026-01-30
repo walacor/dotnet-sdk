@@ -11,7 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 using System;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Walacor_SDK.Client;
 using Walacor_SDK.Services.Abs;
 using Walacor_SDK.Services.Impl;
@@ -30,7 +33,13 @@ namespace Walacor_SDK
         private readonly ServiceFactory _factory;
         private bool _disposed;
 
-        public WalacorService(string baseUri, string userName, string password, WalacorHttpClientOptions? options = null)
+        public WalacorService(
+            string baseUri,
+            string userName,
+            string password,
+            WalacorHttpClientOptions? options = null,
+            bool enableConsoleLogging = true,
+            LogLevel minimumLogLevel = LogLevel.Information)
         {
             if (string.IsNullOrWhiteSpace(baseUri))
             {
@@ -49,6 +58,17 @@ namespace Walacor_SDK
 
             var normalizedBase = UriHelper.NormalizeBaseUri(baseUri);
             var apiBase = UriHelper.BuildApiBaseUri(normalizedBase, ApiSegments.ApiBase);
+
+            options ??= new WalacorHttpClientOptions();
+            if (enableConsoleLogging && options.LoggerFactory == NullLoggerFactory.Instance)
+            {
+                options.LoggerFactory = LoggerFactory.Create(builder =>
+                {
+                    builder
+                        .SetMinimumLevel(minimumLogLevel)
+                        .AddConsole();
+                });
+            }
 
             var tokenProvider = new UsernamePasswordTokenProvider(normalizedBase, userName, password, options);
             var transport = new WalacorHttpClient(apiBase, tokenProvider, options);

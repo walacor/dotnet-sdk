@@ -15,10 +15,12 @@
 using System;
 using System.Net;
 using System.Net.Http;
+using Microsoft.Extensions.Logging.Abstractions;
 using Walacor_SDK.Client.Pipeline;
 using Walacor_SDK.Client.Serialization;
 using Walacor_SDK.Client.Strategies;
 using Walacor_SDK.W_Client.Abstractions;
+using Walacor_SDK.W_Client.Options;
 
 namespace Walacor_SDK.Client.Transport
 {
@@ -27,9 +29,15 @@ namespace Walacor_SDK.Client.Transport
         internal HttpClient Create(
             Uri baseAddress,
             IAuthTokenProvider tokens,
+            WalacorHttpClientOptions options,
             IBackoffStrategy? backoff = null,
             int maxRetries = 2)
         {
+            if (options == null)
+            {
+                throw new ArgumentNullException(nameof(options));
+            }
+
             // Transport
             var transport = new HttpClientHandler
             {
@@ -37,10 +45,16 @@ namespace Walacor_SDK.Client.Transport
                 UseCookies = false,
             };
 
-            // Chain: Logging -> Retry -> Auth -> Transport
-            var auth = new AuthHandler(tokens, transport);
-            var retry = new RetryHandler(backoff ?? new ExponentialJitterBackoff(), maxRetries, auth);
-            var logging = new CorrelationLoggingHandler(retry);
+            // Chain: Correlation -> SDK Logging -> Retry -> Auth -> Transport
+            var loggerFactory = options.LoggerFactory ?? NullLoggerFactory.Instance;
+            var authLogger = loggerFactory.CreateLogger("Walacor_SDK.Auth");
+            var retryLogger = loggerFactory.CreateLogger("Walacor_SDK.Retry");
+            var httpLogger = loggerFactory.CreateLogger("Walacor_SDK.Http");
+
+            var auth = new AuthHandler(tokens, authLogger, transport);
+            var retry = new RetryHandler(backoff ?? new ExponentialJitterBackoff(), maxRetries, retryLogger, auth);
+            var sdkLogging = new SdkLoggingHandler(httpLogger, options, retry);
+            var logging = new CorrelationLoggingHandler(sdkLogging);
 
             var http = new HttpClient(logging)
             {

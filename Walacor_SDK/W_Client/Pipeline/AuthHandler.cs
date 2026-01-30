@@ -13,13 +13,17 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Walacor_SDK.Client.Extensions;
 using Walacor_SDK.W_Client.Abstractions;
+using Walacor_SDK.W_Client.Constants;
 
 namespace Walacor_SDK.Client.Pipeline
 {
@@ -30,11 +34,13 @@ namespace Walacor_SDK.Client.Pipeline
 
         private readonly IAuthTokenProvider _tokens;
         private readonly SemaphoreSlim _refreshLock = new SemaphoreSlim(1, 1);
+        private readonly ILogger _logger;
 
-        public AuthHandler(IAuthTokenProvider tokens, HttpMessageHandler inner)
+        public AuthHandler(IAuthTokenProvider tokens, ILogger logger, HttpMessageHandler inner)
             : base(inner)
         {
             this._tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
+            this._logger = logger ?? NullLogger.Instance;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
@@ -50,10 +56,24 @@ namespace Walacor_SDK.Client.Pipeline
 
             response.Dispose();
 
+            this._logger.LogDebug(
+                AuthLoggingConstants.RefreshingToken,
+                AuthLoggingConstants.MsgRefreshingToken,
+                GetCorrelationId(request) ?? string.Empty);
+
             await this._refreshLock.WaitAsync(ct).ConfigureAwait(false);
             try
             {
                 token = await this._tokens.RefreshTokenAsync(ct).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogWarning(
+                    AuthLoggingConstants.TokenRefreshFailed,
+                    ex,
+                    AuthLoggingConstants.MsgTokenRefreshFailed,
+                    GetCorrelationId(request) ?? string.Empty);
+                throw;
             }
             finally
             {
@@ -63,8 +83,12 @@ namespace Walacor_SDK.Client.Pipeline
             var retry = await request.CloneAsync().ConfigureAwait(false);
             TryApplyBearer(retry, token);
 
-            var second = await base.SendAsync(retry, ct).ConfigureAwait(false);
-            return second;
+            this._logger.LogDebug(
+                AuthLoggingConstants.RetryingAfterRefresh,
+                AuthLoggingConstants.MsgRetryingAfterRefresh,
+                GetCorrelationId(request) ?? string.Empty);
+
+            return await base.SendAsync(retry, ct).ConfigureAwait(false);
         }
 
         private static void TryApplyBearer(HttpRequestMessage request, string? token)
@@ -72,7 +96,6 @@ namespace Walacor_SDK.Client.Pipeline
             var normalized = NormalizeBearerToken(token);
             if (string.IsNullOrEmpty(normalized))
             {
-                // If token is invalid/empty, don't set Authorization at all.
                 request.Headers.Authorization = null;
                 return;
             }
@@ -87,15 +110,29 @@ namespace Walacor_SDK.Client.Pipeline
                 return null;
             }
 
-            var t = token!.Trim();
+            var t = token?.Trim();
 
-            // Some providers return "Bearer <token>" already.
-            if (t.StartsWith(BearerPrefix, StringComparison.OrdinalIgnoreCase))
+            if (t!.StartsWith(BearerPrefix, StringComparison.OrdinalIgnoreCase))
             {
                 t = t.Substring(BearerPrefix.Length).Trim();
             }
 
             return string.IsNullOrEmpty(t) ? null : t;
+        }
+
+        private static string? GetCorrelationId(HttpRequestMessage request)
+        {
+            if (request.Properties.TryGetValue(AuthLoggingConstants.CorrelationPropertyKey, out var corrObj))
+            {
+                return corrObj?.ToString();
+            }
+
+            if (request.Headers.TryGetValues(AuthLoggingConstants.CorrelationHeader, out var values))
+            {
+                return values.FirstOrDefault();
+            }
+
+            return null;
         }
     }
 }

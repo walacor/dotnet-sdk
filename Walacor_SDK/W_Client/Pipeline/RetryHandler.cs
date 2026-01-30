@@ -18,8 +18,11 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Walacor_SDK.Client.Extensions;
 using Walacor_SDK.W_Client.Abstractions;
+using Walacor_SDK.W_Client.Constants;
 
 namespace Walacor_SDK.Client.Pipeline
 {
@@ -27,28 +30,33 @@ namespace Walacor_SDK.Client.Pipeline
     {
         private static readonly HttpStatusCode[] TransientCodes =
         [
-            HttpStatusCode.RequestTimeout, // 408
-            (HttpStatusCode)429, // Too Many Requests
-            HttpStatusCode.InternalServerError, // 500
-            HttpStatusCode.BadGateway, // 502
-            HttpStatusCode.ServiceUnavailable, // 503
-            HttpStatusCode.GatewayTimeout, // 504
+            HttpStatusCode.RequestTimeout,       // 408
+            (HttpStatusCode)429,                 // Too Many Requests
+            HttpStatusCode.InternalServerError,  // 500
+            HttpStatusCode.BadGateway,           // 502
+            HttpStatusCode.ServiceUnavailable,   // 503
+            HttpStatusCode.GatewayTimeout,       // 504
         ];
 
         private readonly IBackoffStrategy _backoff;
         private readonly int _maxRetries;
+        private readonly ILogger _logger;
 
         public RetryHandler(
             IBackoffStrategy backoff,
             int maxRetries,
+            ILogger logger,
             HttpMessageHandler inner)
             : base(inner)
         {
             this._backoff = backoff ?? throw new ArgumentNullException(nameof(backoff));
             this._maxRetries = Math.Max(0, maxRetries);
+            this._logger = logger ?? NullLogger.Instance;
         }
 
+#pragma warning disable MA0051 // Method is too long
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+#pragma warning restore MA0051 // Method is too long
         {
             var isIdempotentRead = request.Method == HttpMethod.Get || request.Method == HttpMethod.Head;
             if (!isIdempotentRead)
@@ -69,11 +77,30 @@ namespace Walacor_SDK.Client.Pipeline
 
                     if (!TransientCodes.Contains(response.StatusCode) || attempt > this._maxRetries + 1)
                     {
+                        if (TransientCodes.Contains(response.StatusCode) && attempt > this._maxRetries + 1)
+                        {
+                            this._logger.LogWarning(
+                                RetryLoggingConstants.MaxRetriesReached,
+                                RetryLoggingConstants.MsgMaxRetriesReachedWithStatus,
+                                attempt,
+                                (int)response.StatusCode,
+                                GetCorrelationId(request) ?? string.Empty);
+                        }
+
                         return response;
                     }
 
                     var retryAfterDelay = GetRetryAfterDelay(response);
                     var delay = retryAfterDelay ?? this._backoff.ComputeDelay(attempt);
+
+                    this._logger.LogWarning(
+                        RetryLoggingConstants.RetryingRequest,
+                        RetryLoggingConstants.MsgRetryingWithStatus,
+                        attempt,
+                        delay.TotalMilliseconds,
+                        (int)response.StatusCode,
+                        GetCorrelationId(request) ?? string.Empty);
+
                     response.Dispose();
                     await Task.Delay(delay, ct).ConfigureAwait(false);
                     continue;
@@ -86,10 +113,23 @@ namespace Walacor_SDK.Client.Pipeline
                 {
                     if (attempt > this._maxRetries + 1)
                     {
+                        this._logger.LogWarning(
+                            RetryLoggingConstants.MaxRetriesReached,
+                            RetryLoggingConstants.MsgMaxRetriesReachedNetworkFailure,
+                            attempt,
+                            GetCorrelationId(request) ?? string.Empty);
                         throw;
                     }
 
                     var delay = this._backoff.ComputeDelay(attempt);
+
+                    this._logger.LogWarning(
+                        RetryLoggingConstants.RetryingRequest,
+                        RetryLoggingConstants.MsgRetryingNetworkFailure,
+                        attempt,
+                        delay.TotalMilliseconds,
+                        GetCorrelationId(request) ?? string.Empty);
+
                     await Task.Delay(delay, ct).ConfigureAwait(false);
                     continue;
                 }
@@ -112,6 +152,21 @@ namespace Walacor_SDK.Client.Pipeline
             {
                 var delta = response.Headers.RetryAfter.Date.Value - DateTimeOffset.UtcNow;
                 return delta > TimeSpan.Zero ? delta : TimeSpan.Zero;
+            }
+
+            return null;
+        }
+
+        private static string? GetCorrelationId(HttpRequestMessage request)
+        {
+            if (request.Properties.TryGetValue(RetryLoggingConstants.CorrelationPropertyKey, out var corrObj))
+            {
+                return corrObj?.ToString();
+            }
+
+            if (request.Headers.TryGetValues(RetryLoggingConstants.CorrelationHeader, out var values))
+            {
+                return values.FirstOrDefault();
             }
 
             return null;

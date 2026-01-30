@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using System;
 using System.Net;
@@ -34,7 +35,7 @@ namespace Test_Walacor_SDK.W_Client.Handlers
             tokens.Setup(p => p.RefreshTokenAsync(It.IsAny<CancellationToken>()))
                   .ReturnsAsync("new-token");
 
-            var auth = new AuthHandler(tokens.Object, inner: fake);
+            var auth = new AuthHandler(tokens.Object, NullLogger.Instance, inner: fake);
             var client = new HttpClient(auth) { BaseAddress = new Uri("https://example.test/") };
 
             var resp = await client.SendAsync(new HttpRequestMessage(HttpMethod.Get, "secure"));

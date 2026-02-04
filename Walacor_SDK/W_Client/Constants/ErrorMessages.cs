@@ -16,7 +16,7 @@ namespace Walacor_SDK.W_Client.Constants
 {
     internal static class ErrorMessages
     {
-        // Validation / common
+        public const string RequestFailed = "The request failed.";
         public const string FileToVerifyDoesNotExist = "The file to verify does not exist.";
         public const string FileNotFound = "File not found.";
         public const string FileWasDeleted = "File was deleted.";
@@ -33,5 +33,7 @@ namespace Walacor_SDK.W_Client.Constants
 
         public const string VerifyResponseMissingFileInfo = "Verify response did not contain 'fileInfo'.";
         public const string AuthSucceededNoToken = "Authentication succeeded but no token was returned.";
+
+        public const string StoreFailed = "Failed to store file metadata.";
     }
 }

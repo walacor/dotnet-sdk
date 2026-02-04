@@ -18,6 +18,24 @@ namespace Walacor_SDK.W_Client.Constants
 {
     internal static class AuthLoggingConstants
     {
+        public const string MsgTokenRefreshSucceeded =
+         "Token refresh succeeded (CorrelationId: {CorrelationId}, DurationMs: {DurationMs})";
+
+        public const string MsgTokenRefreshCancelled =
+            "Token refresh cancelled (CorrelationId: {CorrelationId}, DurationMs: {DurationMs})";
+
+        public const string MsgTokenRefreshFailedWithDuration =
+            "Token refresh failed (CorrelationId: {CorrelationId}, DurationMs: {DurationMs})";
+
+        public const string MsgRetryAfterRefreshCompleted =
+            "Retry after token refresh completed (CorrelationId: {CorrelationId}, Status: {StatusCode}, DurationMs: {DurationMs})";
+
+        public const string MsgRetryAfterRefreshCancelled =
+            "Retry after token refresh cancelled (CorrelationId: {CorrelationId}, DurationMs: {DurationMs})";
+
+        public const string MsgRetryAfterRefreshFailed =
+            "Retry after token refresh failed (CorrelationId: {CorrelationId}, DurationMs: {DurationMs})";
+
         public const string MsgRefreshingToken =
             "401 received, refreshing token (CorrelationId: {CorrelationId})";
 
@@ -34,5 +52,10 @@ namespace Walacor_SDK.W_Client.Constants
         public static readonly EventId RefreshingToken = new EventId(3000, nameof(RefreshingToken));
         public static readonly EventId TokenRefreshFailed = new EventId(3001, nameof(TokenRefreshFailed));
         public static readonly EventId RetryingAfterRefresh = new EventId(3002, nameof(RetryingAfterRefresh));
+        public static readonly EventId TokenRefreshSucceeded = new EventId(2005, nameof(TokenRefreshSucceeded));
+        public static readonly EventId TokenRefreshCancelled = new EventId(2006, nameof(TokenRefreshCancelled));
+        public static readonly EventId RetryAfterRefreshCompleted = new EventId(2007, nameof(RetryAfterRefreshCompleted));
+        public static readonly EventId RetryAfterRefreshCancelled = new EventId(2008, nameof(RetryAfterRefreshCancelled));
+        public static readonly EventId RetryAfterRefreshFailed = new EventId(2009, nameof(RetryAfterRefreshFailed));
     }
 }

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -43,8 +44,12 @@ namespace Walacor_SDK.Client.Pipeline
             this._logger = logger ?? NullLogger.Instance;
         }
 
+#pragma warning disable MA0051 // Method is too long
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+#pragma warning restore MA0051 // Method is too long
         {
+            var correlationId = GetCorrelationId(request) ?? string.Empty;
+
             var token = await this._tokens.GetTokenAsync(ct).ConfigureAwait(false);
             TryApplyBearer(request, token);
 
@@ -59,20 +64,48 @@ namespace Walacor_SDK.Client.Pipeline
             this._logger.LogDebug(
                 AuthLoggingConstants.RefreshingToken,
                 AuthLoggingConstants.MsgRefreshingToken,
-                GetCorrelationId(request) ?? string.Empty);
+                correlationId);
 
             await this._refreshLock.WaitAsync(ct).ConfigureAwait(false);
+
+            string? refreshedToken;
+            var refreshSw = Stopwatch.StartNew();
+
             try
             {
-                token = await this._tokens.RefreshTokenAsync(ct).ConfigureAwait(false);
+                refreshedToken = await this._tokens.RefreshTokenAsync(ct).ConfigureAwait(false);
+                refreshSw.Stop();
+
+                this._logger.LogInformation(
+                    AuthLoggingConstants.TokenRefreshSucceeded,
+                    AuthLoggingConstants.MsgTokenRefreshSucceeded,
+                    correlationId,
+                    refreshSw.ElapsedMilliseconds);
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                refreshSw.Stop();
+
+                // cancellation is expected; keep it low-noise
+                this._logger.LogDebug(
+                    AuthLoggingConstants.TokenRefreshCancelled,
+                    AuthLoggingConstants.MsgTokenRefreshCancelled,
+                    correlationId,
+                    refreshSw.ElapsedMilliseconds);
+
+                throw;
             }
             catch (Exception ex)
             {
+                refreshSw.Stop();
+
                 this._logger.LogWarning(
                     AuthLoggingConstants.TokenRefreshFailed,
                     ex,
-                    AuthLoggingConstants.MsgTokenRefreshFailed,
-                    GetCorrelationId(request) ?? string.Empty);
+                    AuthLoggingConstants.MsgTokenRefreshFailedWithDuration,
+                    correlationId,
+                    refreshSw.ElapsedMilliseconds);
+
                 throw;
             }
             finally
@@ -81,14 +114,53 @@ namespace Walacor_SDK.Client.Pipeline
             }
 
             var retry = await request.CloneAsync().ConfigureAwait(false);
-            TryApplyBearer(retry, token);
+            TryApplyBearer(retry, refreshedToken);
 
             this._logger.LogDebug(
                 AuthLoggingConstants.RetryingAfterRefresh,
                 AuthLoggingConstants.MsgRetryingAfterRefresh,
-                GetCorrelationId(request) ?? string.Empty);
+                correlationId);
 
-            return await base.SendAsync(retry, ct).ConfigureAwait(false);
+            var retrySw = Stopwatch.StartNew();
+            try
+            {
+                var retryResponse = await base.SendAsync(retry, ct).ConfigureAwait(false);
+                retrySw.Stop();
+
+                this._logger.LogInformation(
+                    AuthLoggingConstants.RetryAfterRefreshCompleted,
+                    AuthLoggingConstants.MsgRetryAfterRefreshCompleted,
+                    correlationId,
+                    (int)retryResponse.StatusCode,
+                    retrySw.ElapsedMilliseconds);
+
+                return retryResponse;
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                retrySw.Stop();
+
+                this._logger.LogDebug(
+                    AuthLoggingConstants.RetryAfterRefreshCancelled,
+                    AuthLoggingConstants.MsgRetryAfterRefreshCancelled,
+                    correlationId,
+                    retrySw.ElapsedMilliseconds);
+
+                throw;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                retrySw.Stop();
+
+                this._logger.LogWarning(
+                    AuthLoggingConstants.RetryAfterRefreshFailed,
+                    ex,
+                    AuthLoggingConstants.MsgRetryAfterRefreshFailed,
+                    correlationId,
+                    retrySw.ElapsedMilliseconds);
+
+                throw;
+            }
         }
 
         private static void TryApplyBearer(HttpRequestMessage request, string? token)

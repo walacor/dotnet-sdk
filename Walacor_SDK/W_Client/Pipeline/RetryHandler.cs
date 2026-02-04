@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -58,66 +59,123 @@ namespace Walacor_SDK.Client.Pipeline
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
 #pragma warning restore MA0051 // Method is too long
         {
+            // Retrying non-idempotent operations can cause duplicate side effects.
             var isIdempotentRead = request.Method == HttpMethod.Get || request.Method == HttpMethod.Head;
             if (!isIdempotentRead)
             {
                 return await base.SendAsync(request, ct).ConfigureAwait(false);
             }
 
-            int attempt = 0;
+            var correlationId = GetCorrelationId(request) ?? string.Empty;
+            var method = request.Method.Method;
+            var path = request.RequestUri?.PathAndQuery ?? string.Empty;
+
+            // maxRetries=0 => maxAttempts=1 (no retries).
+            var maxAttempts = this._maxRetries + 1;
+
+            var totalSw = Stopwatch.StartNew();
+            var attempt = 0;
+
             while (true)
             {
                 attempt++;
 
+                // Each attempt duration (useful for diagnosing slowness vs backoff)
+                var attemptSw = Stopwatch.StartNew();
+
                 try
                 {
-                    var response = await base
-                        .SendAsync(attempt == 1 ? request : await request.CloneAsync().ConfigureAwait(false), ct)
-                        .ConfigureAwait(false);
+                    var toSend = attempt == 1 ? request : await request.CloneAsync().ConfigureAwait(false);
+                    var response = await base.SendAsync(toSend, ct).ConfigureAwait(false);
 
-                    if (!TransientCodes.Contains(response.StatusCode) || attempt > this._maxRetries + 1)
+                    attemptSw.Stop();
+
+                    var statusCode = (int)response.StatusCode;
+                    var isTransient = TransientCodes.Contains(response.StatusCode);
+
+                    // Not transient => return immediately (no retry).
+                    if (!isTransient)
                     {
-                        if (TransientCodes.Contains(response.StatusCode) && attempt > this._maxRetries + 1)
-                        {
-                            this._logger.LogWarning(
-                                RetryLoggingConstants.MaxRetriesReached,
-                                RetryLoggingConstants.MsgMaxRetriesReachedWithStatus,
-                                attempt,
-                                (int)response.StatusCode,
-                                GetCorrelationId(request) ?? string.Empty);
-                        }
+                        return response;
+                    }
+
+                    // Transient but we've exhausted attempts => log and return the last response.
+                    if (attempt >= maxAttempts)
+                    {
+                        totalSw.Stop();
+
+                        this._logger.LogWarning(
+                            RetryLoggingConstants.MaxRetriesReached,
+                            RetryLoggingConstants.MsgMaxRetriesReachedWithStatusAndTiming,
+                            method,
+                            path,
+                            attempt,
+                            maxAttempts,
+                            statusCode,
+                            attemptSw.ElapsedMilliseconds,
+                            totalSw.ElapsedMilliseconds,
+                            correlationId);
 
                         return response;
                     }
 
+                    // Compute delay: Retry-After (if present) wins, otherwise exponential backoff strategy.
                     var retryAfterDelay = GetRetryAfterDelay(response);
                     var delay = retryAfterDelay ?? this._backoff.ComputeDelay(attempt);
 
                     this._logger.LogWarning(
                         RetryLoggingConstants.RetryingRequest,
-                        RetryLoggingConstants.MsgRetryingWithStatus,
+                        RetryLoggingConstants.MsgRetryingWithStatusAndTiming,
+                        method,
+                        path,
                         attempt,
+                        maxAttempts,
                         delay.TotalMilliseconds,
-                        (int)response.StatusCode,
-                        GetCorrelationId(request) ?? string.Empty);
+                        statusCode,
+                        attemptSw.ElapsedMilliseconds,
+                        correlationId);
 
                     response.Dispose();
                     await Task.Delay(delay, ct).ConfigureAwait(false);
                     continue;
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException) when (ct.IsCancellationRequested)
                 {
+                    attemptSw.Stop();
+                    totalSw.Stop();
+
+                    this._logger.LogDebug(
+                        RetryLoggingConstants.RequestCancelled,
+                        RetryLoggingConstants.MsgRequestCancelled,
+                        method,
+                        path,
+                        attempt,
+                        attemptSw.ElapsedMilliseconds,
+                        totalSw.ElapsedMilliseconds,
+                        correlationId);
+
                     throw;
                 }
-                catch (HttpRequestException)
+                catch (HttpRequestException ex)
                 {
-                    if (attempt > this._maxRetries + 1)
+                    attemptSw.Stop();
+
+                    if (attempt >= maxAttempts)
                     {
+                        totalSw.Stop();
+
                         this._logger.LogWarning(
                             RetryLoggingConstants.MaxRetriesReached,
-                            RetryLoggingConstants.MsgMaxRetriesReachedNetworkFailure,
+                            ex,
+                            RetryLoggingConstants.MsgMaxRetriesReachedNetworkFailureWithTiming,
+                            method,
+                            path,
                             attempt,
-                            GetCorrelationId(request) ?? string.Empty);
+                            maxAttempts,
+                            attemptSw.ElapsedMilliseconds,
+                            totalSw.ElapsedMilliseconds,
+                            correlationId);
+
                         throw;
                     }
 
@@ -125,10 +183,15 @@ namespace Walacor_SDK.Client.Pipeline
 
                     this._logger.LogWarning(
                         RetryLoggingConstants.RetryingRequest,
-                        RetryLoggingConstants.MsgRetryingNetworkFailure,
+                        ex,
+                        RetryLoggingConstants.MsgRetryingNetworkFailureWithTiming,
+                        method,
+                        path,
                         attempt,
+                        maxAttempts,
                         delay.TotalMilliseconds,
-                        GetCorrelationId(request) ?? string.Empty);
+                        attemptSw.ElapsedMilliseconds,
+                        correlationId);
 
                     await Task.Delay(delay, ct).ConfigureAwait(false);
                     continue;

@@ -18,6 +18,21 @@ namespace Walacor_SDK.W_Client.Constants
 {
     internal static class RetryLoggingConstants
     {
+        public const string MsgRetryingWithStatusAndTiming =
+            "Retrying HTTP request (Method: {Method}, Path: {Path}, Attempt: {Attempt}/{MaxAttempts}, DelayMs: {DelayMs}, Status: {StatusCode}, AttemptDurationMs: {AttemptDurationMs}, CorrelationId: {CorrelationId})";
+
+        public const string MsgMaxRetriesReachedWithStatusAndTiming =
+            "Max retry attempts reached (Method: {Method}, Path: {Path}, Attempt: {Attempt}/{MaxAttempts}, Status: {StatusCode}, AttemptDurationMs: {AttemptDurationMs}, TotalDurationMs: {TotalDurationMs}, CorrelationId: {CorrelationId})";
+
+        public const string MsgRetryingNetworkFailureWithTiming =
+            "Retrying HTTP request after network failure (Method: {Method}, Path: {Path}, Attempt: {Attempt}/{MaxAttempts}, DelayMs: {DelayMs}, AttemptDurationMs: {AttemptDurationMs}, CorrelationId: {CorrelationId})";
+
+        public const string MsgMaxRetriesReachedNetworkFailureWithTiming =
+            "Max retry attempts reached after network failure (Method: {Method}, Path: {Path}, Attempt: {Attempt}/{MaxAttempts}, AttemptDurationMs: {AttemptDurationMs}, TotalDurationMs: {TotalDurationMs}, CorrelationId: {CorrelationId})";
+
+        public const string MsgRequestCancelled =
+            "HTTP request cancelled (Method: {Method}, Path: {Path}, Attempt: {Attempt}, AttemptDurationMs: {AttemptDurationMs}, TotalDurationMs: {TotalDurationMs}, CorrelationId: {CorrelationId})";
+
         public const string MsgMaxRetriesReachedWithStatus =
            "HTTP retry limit reached after {Attempt} attempts with status {StatusCode} (CorrelationId: {CorrelationId})";
 
@@ -35,5 +50,6 @@ namespace Walacor_SDK.W_Client.Constants
 
         public static readonly EventId RetryingRequest = new EventId(2000, nameof(RetryingRequest));
         public static readonly EventId MaxRetriesReached = new EventId(2001, nameof(MaxRetriesReached));
+        public static readonly EventId RequestCancelled = new EventId(2002, nameof(RequestCancelled));
     }
 }
